@@ -16,6 +16,7 @@
                   v-model="selectedWorkspaceId"
                   @change="handleWorkspaceChange"
                   class="border border-gray-300 rounded-md px-3 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  :disabled="loading"
                 >
                   <option 
                     v-for="workspace in workspaces" 
@@ -64,6 +65,31 @@
 
       <!-- PPT管理内容 -->
       <div class="p-6">
+        <!-- 错误提示 -->
+        <div v-if="error" class="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <div class="flex items-center">
+            <svg class="w-5 h-5 text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+            </svg>
+            <span class="text-red-800">{{ error }}</span>
+            <button @click="error = ''" class="ml-auto text-red-400 hover:text-red-600">
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+        
+        <!-- 加载状态 -->
+        <div v-if="loading" class="flex items-center justify-center py-12">
+          <div class="flex items-center space-x-2">
+            <svg class="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span class="text-gray-600">加载中...</span>
+          </div>
+        </div>
         <!-- 筛选和视图控制 -->
         <div class="flex items-center justify-between mb-6">
           <div class="flex items-center space-x-4">
@@ -73,18 +99,21 @@
               <button 
                 @click="batchPublish"
                 class="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                :disabled="loading"
               >
                 批量发布
               </button>
               <button 
                 @click="batchArchive"
                 class="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                :disabled="loading"
               >
                 批量归档
               </button>
               <button 
                 @click="batchDelete"
                 class="text-sm text-red-600 hover:text-red-700 font-medium"
+                :disabled="loading"
               >
                 批量删除
               </button>
@@ -177,7 +206,7 @@
         </div>
 
         <!-- PPT列表 -->
-        <div v-if="filteredPPTs.length > 0">
+        <div v-if="!loading && filteredPPTs.length > 0">
           <!-- 网格视图 -->
           <div v-if="viewMode === 'grid'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             <div 
@@ -190,9 +219,9 @@
               <div class="absolute top-3 left-3 z-10">
                 <input 
                   type="checkbox" 
-                  :checked="selectedPPTs.includes(ppt.id)"
+                  :checked="selectedPPTs.includes(ppt.pptId || ppt.id.toString())"
                   @click.stop
-                  @change="togglePPTSelection(ppt.id)"
+                  @change="togglePPTSelection(ppt.pptId || ppt.id.toString())"
                   class="w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
                 >
               </div>
@@ -334,9 +363,9 @@
                     <td class="px-6 py-4 whitespace-nowrap">
                       <input 
                         type="checkbox" 
-                        :checked="selectedPPTs.includes(ppt.id)"
+                        :checked="selectedPPTs.includes(ppt.pptId || ppt.id.toString())"
                         @click.stop
-                        @change="togglePPTSelection(ppt.id)"
+                        @change="togglePPTSelection(ppt.pptId || ppt.id.toString())"
                         class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
                       >
                     </td>
@@ -374,20 +403,47 @@
                         <button 
                           @click.stop="showPPTDetails(ppt)"
                           class="text-blue-600 hover:text-blue-700"
+                          :disabled="loading"
                         >
                           详情
                         </button>
                         <button 
                           @click.stop="editPPT(ppt)"
                           class="text-blue-600 hover:text-blue-700"
+                          :disabled="loading"
                         >
                           编辑
                         </button>
                         <button 
                           @click.stop="previewPPT(ppt)"
                           class="text-green-600 hover:text-green-700"
+                          :disabled="loading"
                         >
                           预览
+                        </button>
+                        <button 
+                          @click.stop="duplicatePPT(ppt)"
+                          class="text-orange-600 hover:text-orange-700"
+                          title="复制"
+                          :disabled="loading"
+                        >
+                          复制
+                        </button>
+                        <button 
+                          @click.stop="downloadPPT(ppt)"
+                          class="text-indigo-600 hover:text-indigo-700"
+                          title="下载"
+                          :disabled="loading"
+                        >
+                          下载
+                        </button>
+                        <button 
+                          @click.stop="sharePPT(ppt)"
+                          class="text-cyan-600 hover:text-cyan-700"
+                          title="分享"
+                          :disabled="loading"
+                        >
+                          分享
                         </button>
                         <div class="relative">
                           <button 
@@ -400,25 +456,6 @@
                             v-if="activePPTMenu === ppt.id"
                             class="absolute right-0 top-8 w-32 bg-white rounded-md shadow-lg border border-gray-200 z-20"
                           >
-                            <button 
-                              @click.stop="duplicatePPT(ppt)"
-                              class="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                            >
-                              复制
-                            </button>
-                            <button 
-                              @click.stop="downloadPPT(ppt)"
-                              class="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                            >
-                              下载
-                            </button>
-                            <button 
-                              @click.stop="sharePPT(ppt)"
-                              class="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                            >
-                              分享
-                            </button>
-                            <hr class="my-1">
                             <button 
                               @click.stop="deletePPT(ppt)"
                               class="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50"
@@ -437,7 +474,7 @@
         </div>
         
         <!-- 空状态 -->
-        <div v-else class="text-center py-12">
+        <div v-else-if="!loading" class="text-center py-12">
           <div class="text-gray-400 text-6xl mb-4">📄</div>
           <h3 class="text-lg font-medium text-gray-900 mb-2">暂无PPT</h3>
           <p class="text-gray-600 mb-4">当前工作空间还没有PPT文件，创建第一个吧！</p>
@@ -496,7 +533,7 @@
                   </div>
                   <div>
                     <label class="text-sm font-medium text-gray-500">页数</label>
-                    <p class="text-gray-900">{{ selectedPPTDetails.slides }}页</p>
+                    <p class="text-gray-900">{{ selectedPPTDetails.slides || selectedPPTDetails.slideCount || 0 }}页</p>
                   </div>
                 </div>
               </div>
@@ -536,7 +573,7 @@
               <h4 class="text-lg font-semibold text-gray-900 mb-4">预览</h4>
               <div class="aspect-video bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
                 <div class="text-white text-center">
-                  <div class="text-4xl font-bold mb-2">{{ selectedPPTDetails.slides }}</div>
+                  <div class="text-4xl font-bold mb-2">{{ selectedPPTDetails.slides || selectedPPTDetails.slideCount || 0 }}</div>
                   <div class="text-lg opacity-90">页PPT</div>
                 </div>
               </div>
@@ -571,18 +608,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useWorkspaceStore } from '@/stores/workspace'
 import Sidebar from '@/components/Sidebar.vue'
+import * as pptAPI from '@/api/pptManagement'
+import type { PPTInfo, PPTStatus } from '@/api/pptManagement'
 
-// 接口定义
-interface PPT {
+// 定义PPT接口（扩展API接口）
+interface PPT extends PPTInfo {
   id: number
   name: string
   subject: string
   chapter: string
   slides: number
-  status: 'draft' | 'published' | 'archived'
+  status: PPTStatus
   createdAt: string
   updatedAt: string
   workspaceId: string
@@ -595,19 +634,74 @@ const workspaceStore = useWorkspaceStore()
 const { workspaces, currentWorkspace, currentWorkspaceName, switchWorkspace } = workspaceStore
 
 // 响应式数据
-const selectedWorkspaceId = ref(currentWorkspace?.id || '')
 const searchQuery = ref('')
+const selectedWorkspaceId = ref('')
 const statusFilter = ref('all')
 const subjectFilter = ref('all')
 const sortBy = ref('createdAt')
 const viewMode = ref<'grid' | 'list'>('grid')
-const selectedPPTs = ref<number[]>([])
+const selectedPPTs = ref<string[]>([])
 const activePPTMenu = ref<number | null>(null)
 const showDetailsModal = ref(false)
 const selectedPPTDetails = ref<PPT | null>(null)
 
-// 模拟PPT数据
-const allPPTs = ref<PPT[]>([
+// 新增状态管理
+const loading = ref(false)
+const error = ref('')
+const allPPTs = ref<PPT[]>([])
+const currentPage = ref(1)
+const pageSize = ref(10)
+const total = ref(0)
+
+// API调用方法
+const loadPPTList = async () => {
+  try {
+    loading.value = true
+    error.value = ''
+    
+    const response = await pptAPI.getPPTList({
+      status: statusFilter.value as any,
+      page: currentPage.value,
+      size: pageSize.value
+    })
+    
+    if (response.success && response.data) {
+      // 转换API数据格式为组件需要的格式
+      allPPTs.value = response.data.map((item: PPTInfo, index: number) => ({
+        id: index + 1, // 临时ID，实际应该使用API返回的ID
+        name: item.title,
+        subject: item.textbook || '未知学科',
+        chapter: item.chapter || '未知章节',
+        slides: item.slideCount,
+        status: item.status,
+        createdAt: item.createdAt ? item.createdAt.split('T')[0] : new Date().toISOString().split('T')[0], // 格式化日期
+        updatedAt: item.updatedAt ? item.updatedAt.split('T')[0] : new Date().toISOString().split('T')[0],
+        workspaceId: currentWorkspace?.id || '1',
+        pptId: item.pptId,
+        title: item.title,
+        description: item.description,
+        textbook: item.textbook,
+        grade: item.grade,
+        slideCount: item.slideCount,
+        createdBy: item.createdBy
+      }))
+      
+      total.value = response.total || 0
+    } else {
+      error.value = response.message || '获取PPT列表失败'
+    }
+  } catch (err: any) {
+    console.error('加载PPT列表失败:', err)
+    error.value = err.message || '网络错误，请稍后重试'
+    // 使用模拟数据作为后备
+    allPPTs.value = getMockPPTData()
+  } finally {
+    loading.value = false
+  }
+}
+
+// 模拟数据（作为后备）
+const getMockPPTData = (): PPT[] => [
   {
     id: 1,
     name: '英语字母与发音',
@@ -619,7 +713,12 @@ const allPPTs = ref<PPT[]>([
     updatedAt: '2024-12-16',
     workspaceId: '1',
     textbookId: 1,
-    chapterId: 1
+    chapterId: 1,
+    pptId: 'ppt_001',
+    title: '英语字母与发音',
+    slideCount: 15,
+    textbook: '英语',
+    grade: '小学一年级'
   },
   {
     id: 2,
@@ -632,61 +731,14 @@ const allPPTs = ref<PPT[]>([
     updatedAt: '2024-12-17',
     workspaceId: '1',
     textbookId: 1,
-    chapterId: 1
-  },
-  {
-    id: 3,
-    name: '家庭成员介绍',
-    subject: '英语',
-    chapter: 'Unit 2 My Family',
-    slides: 20,
-    status: 'published',
-    createdAt: '2024-12-17',
-    updatedAt: '2024-12-18',
-    workspaceId: '1',
-    textbookId: 1,
-    chapterId: 2
-  },
-  {
-    id: 4,
-    name: '质点 参考系和坐标系',
-    subject: '物理',
-    chapter: '第一章 运动的描述',
-    slides: 12,
-    status: 'published',
-    createdAt: '2024-12-10',
-    updatedAt: '2024-12-11',
-    workspaceId: '2',
-    textbookId: 2,
-    chapterId: 1
-  },
-  {
-    id: 5,
-    name: '时间和位移',
-    subject: '物理',
-    chapter: '第一章 运动的描述',
-    slides: 16,
-    status: 'draft',
-    createdAt: '2024-12-12',
-    updatedAt: '2024-12-13',
-    workspaceId: '2',
-    textbookId: 2,
-    chapterId: 1
-  },
-  {
-    id: 6,
-    name: '化学实验基础',
-    subject: '化学',
-    chapter: '第一章 化学实验基本方法',
-    slides: 22,
-    status: 'archived',
-    createdAt: '2024-12-08',
-    updatedAt: '2024-12-09',
-    workspaceId: '3',
-    textbookId: 3,
-    chapterId: 1
+    chapterId: 1,
+    pptId: 'ppt_002',
+    title: '基础问候语',
+    slideCount: 18,
+    textbook: '英语',
+    grade: '小学一年级'
   }
-])
+]
 
 // 计算属性：根据当前工作空间和筛选条件过滤PPT
 const filteredPPTs = computed(() => {
@@ -758,7 +810,8 @@ const getStatusText = (status: string) => {
 
 const selectPPT = (ppt: PPT) => {
   console.log('选择PPT:', ppt)
-  // 这里可以跳转到PPT详情页或编辑页
+  // 调用接口获取并显示PPT详情
+  showPPTDetails(ppt)
 }
 
 const editPPT = (ppt: PPT) => {
@@ -784,7 +837,7 @@ const deletePPT = (ppt: PPT) => {
 }
 
 // 批量选择相关方法
-const togglePPTSelection = (pptId: number) => {
+const togglePPTSelection = (pptId: string) => {
   const index = selectedPPTs.value.indexOf(pptId)
   if (index > -1) {
     selectedPPTs.value.splice(index, 1)
@@ -797,7 +850,7 @@ const toggleSelectAll = () => {
   if (isAllSelected.value) {
     selectedPPTs.value = []
   } else {
-    selectedPPTs.value = filteredPPTs.value.map(ppt => ppt.id)
+    selectedPPTs.value = filteredPPTs.value.map(ppt => ppt.pptId || ppt.id.toString())
   }
 }
 
@@ -806,26 +859,70 @@ const clearSelection = () => {
 }
 
 // 批量操作方法
-const batchPublish = () => {
-  console.log('批量发布:', selectedPPTs.value)
-  alert(`批量发布 ${selectedPPTs.value.length} 个PPT`)
-}
-
-const batchArchive = () => {
-  console.log('批量归档:', selectedPPTs.value)
-  alert(`批量归档 ${selectedPPTs.value.length} 个PPT`)
-}
-
-const batchDelete = () => {
-  if (confirm(`确定要删除选中的 ${selectedPPTs.value.length} 个PPT吗？`)) {
-    selectedPPTs.value.forEach(id => {
-      const index = allPPTs.value.findIndex(p => p.id === id)
-      if (index > -1) {
-        allPPTs.value.splice(index, 1)
-      }
+const batchPublish = async () => {
+  try {
+    loading.value = true
+    const response = await pptAPI.batchUpdatePPTStatus({
+      pptIds: selectedPPTs.value,
+      status: 'published'
     })
-    selectedPPTs.value = []
-    console.log('批量删除完成')
+    
+    if (response.success) {
+      await loadPPTList() // 重新加载列表
+      clearSelection()
+    } else {
+      error.value = response.message || '批量发布失败'
+    }
+  } catch (err: any) {
+    console.error('批量发布失败:', err)
+    error.value = err.message || '批量发布失败'
+  } finally {
+    loading.value = false
+  }
+}
+
+const batchArchive = async () => {
+  try {
+    loading.value = true
+    const response = await pptAPI.batchUpdatePPTStatus({
+      pptIds: selectedPPTs.value,
+      status: 'archived'
+    })
+    
+    if (response.success) {
+      await loadPPTList() // 重新加载列表
+      clearSelection()
+    } else {
+      error.value = response.message || '批量归档失败'
+    }
+  } catch (err: any) {
+    console.error('批量归档失败:', err)
+    error.value = err.message || '批量归档失败'
+  } finally {
+    loading.value = false
+  }
+}
+
+const batchDelete = async () => {
+  if (!confirm(`确定要删除选中的 ${selectedPPTs.value.length} 个PPT吗？此操作不可撤销。`)) {
+    return
+  }
+  
+  try {
+    loading.value = true
+    const response = await pptAPI.batchDeletePPT(selectedPPTs.value)
+    
+    if (response.success) {
+      await loadPPTList() // 重新加载列表
+      clearSelection()
+    } else {
+      error.value = response.message || '批量删除失败'
+    }
+  } catch (err: any) {
+    console.error('批量删除失败:', err)
+    error.value = err.message || '批量删除失败'
+  } finally {
+    loading.value = false
   }
 }
 
@@ -834,35 +931,117 @@ const togglePPTMenu = (pptId: number) => {
   activePPTMenu.value = activePPTMenu.value === pptId ? null : pptId
 }
 
-const duplicatePPT = (ppt: PPT) => {
-  console.log('复制PPT:', ppt)
-  alert(`复制PPT: ${ppt.name}`)
-  activePPTMenu.value = null
+const duplicatePPT = async (ppt: PPT) => {
+  try {
+    loading.value = true
+    const response = await pptAPI.duplicatePPT(ppt.pptId || ppt.id.toString())
+    
+    if (response.success) {
+      await loadPPTList() // 重新加载列表
+    } else {
+      error.value = response.message || '复制PPT失败'
+    }
+  } catch (err: any) {
+    console.error('复制PPT失败:', err)
+    error.value = err.message || '复制PPT失败'
+  } finally {
+    loading.value = false
+    activePPTMenu.value = null
+  }
 }
 
-const downloadPPT = (ppt: PPT) => {
-  console.log('下载PPT:', ppt)
-  alert(`下载PPT: ${ppt.name}`)
-  activePPTMenu.value = null
+const downloadPPT = async (ppt: PPT) => {
+  try {
+    const response = await pptAPI.downloadPPT(ppt.pptId || ppt.id.toString())
+    
+    if (response.success && response.data) {
+      // 创建下载链接
+      const link = document.createElement('a')
+      link.href = response.data.downloadUrl
+      link.download = `${ppt.name}.pptx`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    } else {
+      error.value = response.message || '下载PPT失败'
+    }
+  } catch (err: any) {
+    console.error('下载PPT失败:', err)
+    error.value = err.message || '下载PPT失败'
+  } finally {
+    activePPTMenu.value = null
+  }
 }
 
-const sharePPT = (ppt: PPT) => {
-  console.log('分享PPT:', ppt)
-  alert(`分享PPT: ${ppt.name}`)
-  activePPTMenu.value = null
+const sharePPT = async (ppt: PPT) => {
+  try {
+    const response = await pptAPI.sharePPT(ppt.pptId || ppt.id.toString())
+    
+    if (response.success && response.data) {
+      // 复制分享链接到剪贴板
+      await navigator.clipboard.writeText(response.data.shareUrl)
+      alert('分享链接已复制到剪贴板')
+    } else {
+      error.value = response.message || '生成分享链接失败'
+    }
+  } catch (err: any) {
+    console.error('分享PPT失败:', err)
+    error.value = err.message || '分享PPT失败'
+  } finally {
+    activePPTMenu.value = null
+  }
 }
 
 // PPT详情相关方法
-const showPPTDetails = (ppt: PPT) => {
-  selectedPPTDetails.value = ppt
-  showDetailsModal.value = true
-  console.log('显示PPT详情:', ppt)
+const showPPTDetails = async (ppt: PPT) => {
+  try {
+    const response = await pptAPI.getPPTDetails(ppt.pptId || ppt.id.toString())
+    if (response.success && response.data) {
+      selectedPPTDetails.value = {
+        ...ppt,
+        ...response.data,
+        // 确保页数字段正确映射
+        slides: response.data.slideCount || response.data.slides || ppt.slides
+      }
+      showDetailsModal.value = true
+    } else {
+      error.value = response.message || '获取PPT详情失败'
+    }
+  } catch (err: any) {
+    console.error('获取PPT详情失败:', err)
+    // 使用现有数据作为后备
+    selectedPPTDetails.value = ppt
+    showDetailsModal.value = true
+  }
 }
 
 // 导出功能
-const exportPPTs = () => {
-  console.log('导出PPT列表')
-  alert('导出功能开发中...')
+const exportPPTs = async () => {
+  try {
+    loading.value = true
+    const response = await pptAPI.exportPPTList({
+      status: statusFilter.value,
+      subject: subjectFilter.value,
+      searchQuery: searchQuery.value
+    })
+    
+    if (response.success && response.data) {
+      // 创建下载链接
+      const link = document.createElement('a')
+      link.href = response.data.downloadUrl
+      link.download = 'ppt-list.xlsx'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    } else {
+      error.value = response.message || '导出失败'
+    }
+  } catch (err: any) {
+    console.error('导出PPT列表失败:', err)
+    error.value = err.message || '导出失败'
+  } finally {
+    loading.value = false
+  }
 }
 
 // 点击外部关闭菜单
@@ -870,10 +1049,41 @@ const handleClickOutside = () => {
   activePPTMenu.value = null
 }
 
+// 监听筛选条件变化
+const watchFilters = () => {
+  // 监听状态筛选变化
+  watch(statusFilter, () => {
+    currentPage.value = 1
+    loadPPTList()
+  })
+  
+  // 监听工作空间变化
+  watch(selectedWorkspaceId, () => {
+    currentPage.value = 1
+    loadPPTList()
+  })
+  
+  // 监听搜索关键词变化（防抖）
+  let searchTimeout: NodeJS.Timeout
+  watch(searchQuery, () => {
+    clearTimeout(searchTimeout)
+    searchTimeout = setTimeout(() => {
+      currentPage.value = 1
+      loadPPTList()
+    }, 500)
+  })
+}
+
 // 生命周期
 onMounted(async () => {
   await workspaceStore.initialize()
   selectedWorkspaceId.value = workspaceStore.currentWorkspaceId
+  
+  // 初始化监听器
+  watchFilters()
+  
+  // 加载PPT列表
+  await loadPPTList()
   
   // 添加全局点击事件监听
   document.addEventListener('click', handleClickOutside)
