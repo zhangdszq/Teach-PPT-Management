@@ -38,6 +38,7 @@
           <div class="flex items-center space-x-4">
             <div class="relative">
               <input 
+                v-model="searchQuery"
                 type="text" 
                 placeholder="搜索教材..." 
                 class="w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -49,7 +50,8 @@
             
             <button 
               @click="showCreateModal = true"
-              class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+              :disabled="loading"
+              class="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
             >
               + 添加教材
             </button>
@@ -69,28 +71,28 @@
         <!-- 筛选器 -->
         <div class="flex items-center justify-between mb-6">
           <div class="flex items-center space-x-4">
-            <select class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
-              <option>所有学科</option>
-              <option>英语</option>
-              <option>物理</option>
-              <option>化学</option>
-              <option>语文</option>
-              <option>数学</option>
+            <select v-model="filters.subject" class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+              <option value="">所有学科</option>
+              <option value="英语">英语</option>
+              <option value="物理">物理</option>
+              <option value="化学">化学</option>
+              <option value="语文">语文</option>
+              <option value="数学">数学</option>
             </select>
             
-            <select class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
-              <option>所有年级</option>
-              <option>高一</option>
-              <option>高二</option>
-              <option>高三</option>
+            <select v-model="filters.grade" class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+              <option value="">所有年级</option>
+              <option value="高一">高一</option>
+              <option value="高二">高二</option>
+              <option value="高三">高三</option>
             </select>
             
-            <select class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
-              <option>所有版本</option>
-              <option>人教版</option>
-              <option>苏教版</option>
-              <option>北师大版</option>
-              <option>沪教版</option>
+            <select v-model="filters.version" class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+              <option value="">所有版本</option>
+              <option value="人教版">人教版</option>
+              <option value="苏教版">苏教版</option>
+              <option value="北师大版">北师大版</option>
+              <option value="沪教版">沪教版</option>
             </select>
           </div>
           
@@ -120,7 +122,7 @@
         <div v-if="viewMode === 'grid'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           <!-- 教材卡片 -->
           <div 
-            v-for="textbook in textbooks" 
+            v-for="textbook in filteredTextbooks" 
             :key="textbook.id"
             class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
             @click="selectTextbook(textbook)"
@@ -144,7 +146,7 @@
                 </div>
                 <div class="flex justify-between">
                   <span>章节:</span>
-                  <span>{{ textbook.chapters }}章</span>
+                  <span>{{ textbook.chapterCount }}章</span>
                 </div>
                 <div class="flex justify-between">
                   <span>PPT:</span>
@@ -209,7 +211,7 @@
                 <div class="col-span-2 text-sm text-gray-900">{{ textbook.subject }}</div>
                 <div class="col-span-1 text-sm text-gray-900">{{ textbook.grade }}</div>
                 <div class="col-span-2 text-sm text-gray-900">{{ textbook.version }}</div>
-                <div class="col-span-1 text-sm text-gray-900">{{ textbook.chapters }}</div>
+                <div class="col-span-1 text-sm text-gray-900">{{ textbook.chapterCount }}</div>
                 <div class="col-span-1 text-sm text-gray-900">{{ textbook.pptCount }}</div>
                 <div class="col-span-1">
                   <div class="flex space-x-1">
@@ -411,36 +413,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useWorkspaceStore } from '@/stores/workspace'
+import { textbookAPI } from '@/api/textbook'
 import Sidebar from '@/components/Sidebar.vue'
-
-interface PPT {
-  id: number
-  name: string
-  createdAt: string
-  slides: number
-  workspaceId: string
-}
-
-interface Chapter {
-  id: number
-  name: string
-  ppts: PPT[]
-}
-
-interface Textbook {
-  id: number
-  name: string
-  subject: string
-  grade: string
-  version: string
-  chapters: number
-  pptCount: number
-  lastUpdated: string
-  workspaceId: string
-  chapterList: Chapter[]
-}
+import type { Textbook, Chapter, PPT } from '@/api/types'
 
 // 工作空间store
 const workspaceStore = useWorkspaceStore()
@@ -451,144 +428,189 @@ const viewMode = ref('grid')
 const showCreateModal = ref(false)
 const selectedTextbook = ref<Textbook | null>(null)
 const selectedWorkspaceId = ref(currentWorkspace?.id || '')
+const searchQuery = ref('')
+const loading = ref(false)
+const error = ref<string | null>(null)
+
+// 教材数据
+const textbooks = ref<Textbook[]>([])
+
+// 新教材表单数据
 const newTextbook = ref({
   name: '',
   subject: '',
   grade: '',
   version: '',
-  chapters: 1
+  chapters: 1,
+  workspaceId: ''
 })
 
-// 所有教材数据（包含工作空间信息）
-const allTextbooks = ref([
-  {
-    id: 1,
-    name: '初中英语七年级上册',
-    subject: '英语',
-    grade: '七年级',
-    version: '人教版',
-    chapters: 8,
-    pptCount: 24,
-    lastUpdated: '2024-12-20',
-    workspaceId: '1', // 英语教学工作空间
-    chapterList: [
-      {
-        id: 1,
-        name: 'Unit 1 Hello',
-        ppts: [
-          { id: 1, name: '英语字母与发音', createdAt: '2024-12-15', slides: 15, workspaceId: '1' },
-          { id: 2, name: '基础问候语', createdAt: '2024-12-16', slides: 18, workspaceId: '1' }
-        ]
-      },
-      {
-        id: 2,
-        name: 'Unit 2 My Family',
-        ppts: [
-          { id: 3, name: '家庭成员介绍', createdAt: '2024-12-17', slides: 20, workspaceId: '1' }
-        ]
-      }
-    ]
-  },
-  {
-    id: 2,
-    name: '高中物理必修一',
-    subject: '物理',
-    grade: '高一',
-    version: '人教版',
-    chapters: 6,
-    pptCount: 18,
-    lastUpdated: '2024-12-18',
-    workspaceId: '2', // 物理实验室
-    chapterList: [
-      {
-        id: 1,
-        name: '第一章 运动的描述',
-        ppts: [
-          { id: 1, name: '质点 参考系和坐标系', createdAt: '2024-12-10', slides: 12, workspaceId: '2' }
-        ]
-      }
-    ]
-  },
-  {
-    id: 3,
-    name: '高中化学必修一',
-    subject: '化学',
-    grade: '高一',
-    version: '人教版',
-    chapters: 7,
-    pptCount: 21,
-    lastUpdated: '2024-12-15',
-    workspaceId: '3', // 语文课程组
-    chapterList: []
-  },
-  {
-    id: 4,
-    name: '高中语文必修一',
-    subject: '语文',
-    grade: '高一',
-    version: '人教版',
-    chapters: 5,
-    pptCount: 15,
-    lastUpdated: '2024-12-12',
-    workspaceId: '3', // 语文课程组
-    chapterList: []
-  },
-  {
-    id: 5,
-    name: '初中英语七年级下册',
-    subject: '英语',
-    grade: '七年级',
-    version: '人教版',
-    chapters: 6,
-    pptCount: 18,
-    lastUpdated: '2024-12-10',
-    workspaceId: '1', // 数学教学工作空间
-    chapterList: []
+// 筛选条件
+const filters = ref({
+  subject: '',
+  grade: '',
+  version: ''
+})
+
+// 过滤后的教材列表
+const filteredTextbooks = computed(() => {
+  let result = textbooks.value
+  
+  // 搜索过滤
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase()
+    result = result.filter(textbook => 
+      textbook.name.toLowerCase().includes(query) ||
+      textbook.subject.toLowerCase().includes(query) ||
+      textbook.grade.toLowerCase().includes(query)
+    )
   }
-])
-
-// 根据当前工作空间过滤教材
-const textbooks = computed(() => {
-  if (!currentWorkspace) return []
-  return allTextbooks.value.filter(textbook => textbook.workspaceId === currentWorkspace.id)
+  
+  // 学科过滤
+  if (filters.value.subject) {
+    result = result.filter(textbook => textbook.subject === filters.value.subject)
+  }
+  
+  // 年级过滤
+  if (filters.value.grade) {
+    result = result.filter(textbook => textbook.grade === filters.value.grade)
+  }
+  
+  // 版本过滤
+  if (filters.value.version) {
+    result = result.filter(textbook => textbook.version === filters.value.version)
+  }
+  
+  return result
 })
+
+// 加载教材列表
+const loadTextbooks = async () => {
+  if (!currentWorkspace) return
+  
+  try {
+    loading.value = true
+    error.value = null
+    textbooks.value = await textbookAPI.getTextbooks(currentWorkspace.id)
+  } catch (err) {
+    error.value = '加载教材列表失败'
+    console.error('Failed to load textbooks:', err)
+  } finally {
+    loading.value = false
+  }
+}
 
 // 选择教材
-const selectTextbook = (textbook: Textbook) => {
-  selectedTextbook.value = textbook
+const selectTextbook = async (textbook: Textbook) => {
+  try {
+    loading.value = true
+    // 获取教材详情和章节信息
+    const detailTextbook = await textbookAPI.getTextbookDetail(textbook.id)
+    const chapters = await textbookAPI.getTextbookChapters(textbook.id)
+    detailTextbook.chapterList = chapters
+    selectedTextbook.value = detailTextbook
+  } catch (err) {
+    error.value = '加载教材详情失败'
+    console.error('Failed to load textbook detail:', err)
+  } finally {
+    loading.value = false
+  }
 }
 
 // 处理工作空间切换
 const handleWorkspaceChange = () => {
   if (selectedWorkspaceId.value) {
     switchWorkspace(selectedWorkspaceId.value)
-    // 清空当前选择的教材
     selectedTextbook.value = null
+    loadTextbooks()
   }
 }
 
 // 创建教材
-const createTextbook = () => {
-  // 这里应该调用API创建教材
-  console.log('创建教材:', newTextbook.value)
+const createTextbook = async () => {
+  if (!currentWorkspace) return
   
-  // 重置表单
-  newTextbook.value = {
-    name: '',
-    subject: '',
-    grade: '',
-    version: '',
-    chapters: 1
+  try {
+    loading.value = true
+    error.value = null
+    
+    const textbookData = {
+      ...newTextbook.value,
+      workspaceId: currentWorkspace.id,
+      pptCount: 0
+    }
+    
+    const createdTextbook = await textbookAPI.createTextbook(textbookData)
+    textbooks.value.push(createdTextbook)
+    
+    // 重置表单
+    newTextbook.value = {
+      name: '',
+      subject: '',
+      grade: '',
+      version: '',
+      chapters: 1,
+      workspaceId: ''
+    }
+    
+    showCreateModal.value = false
+  } catch (err) {
+    error.value = '创建教材失败'
+    console.error('Failed to create textbook:', err)
+  } finally {
+    loading.value = false
   }
-  
-  // 关闭模态框
-  showCreateModal.value = false
 }
 
-// 监听当前工作空间变化，更新选择器
-computed(() => {
+// 删除教材
+const deleteTextbook = async (textbookId: number) => {
+  if (!confirm('确定要删除这个教材吗？')) return
+  
+  try {
+    loading.value = true
+    await textbookAPI.deleteTextbook(textbookId)
+    textbooks.value = textbooks.value.filter(t => t.id !== textbookId)
+    
+    if (selectedTextbook.value?.id === textbookId) {
+      selectedTextbook.value = null
+    }
+  } catch (err) {
+    error.value = '删除教材失败'
+    console.error('Failed to delete textbook:', err)
+  } finally {
+    loading.value = false
+  }
+}
+
+// 创建章节
+const createChapter = async (textbookId: number, chapterName: string) => {
+  try {
+    loading.value = true
+    const chapter = await textbookAPI.createChapter(textbookId, { name: chapterName })
+    
+    if (selectedTextbook.value?.id === textbookId) {
+      selectedTextbook.value.chapterList.push(chapter)
+    }
+  } catch (err) {
+    error.value = '创建章节失败'
+    console.error('Failed to create chapter:', err)
+  } finally {
+    loading.value = false
+  }
+}
+
+// 监听当前工作空间变化
+watch(currentWorkspace, (newWorkspace) => {
+  if (newWorkspace) {
+    selectedWorkspaceId.value = newWorkspace.id
+    loadTextbooks()
+  }
+})
+
+// 组件挂载时加载数据
+onMounted(() => {
   if (currentWorkspace) {
-    selectedWorkspaceId.value = currentWorkspace.id
+    loadTextbooks()
   }
 })
 </script>

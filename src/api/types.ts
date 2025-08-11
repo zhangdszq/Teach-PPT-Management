@@ -42,14 +42,44 @@ export interface Project {
  * 教材接口
  */
 export interface Textbook {
-  id: string
-  title: string
+  id: number           // 改为 number 类型匹配后端 Long
+  name: string         // 改为 name 匹配后端字段
   subject: string
   grade: string
   publisher: string
   coverImage: string
   workspaceId: string
   pptCount: number
+  chapterCount?: number  // 添加章节数量字段
+  chapterList?: Chapter[] // 添加章节列表字段
+}
+
+/**
+ * 章节接口
+ */
+export interface Chapter {
+  id: number
+  name: string
+  description?: string
+  chapterOrder: number
+  textbookId: number
+  createdAt: string
+  updatedAt: string
+  ppts: PPT[]
+}
+
+/**
+ * PPT接口
+ */
+export interface PPT {
+  id: number
+  name: string
+  pptId: string
+  slides: number
+  filePath?: string
+  thumbnail?: string
+  chapterId: number
+  createdAt: string
 }
 
 /**

@@ -816,8 +816,9 @@ const selectPPT = (ppt: PPT) => {
 
 const editPPT = (ppt: PPT) => {
   console.log('编辑PPT:', ppt)
-  // 跳转到PPT编辑器
-  alert(`编辑PPT: ${ppt.name}`)
+  // 跳转到PPT编辑器，传递pptID参数
+  const editorUrl = `http://localhost:5174?pptId=${ppt.pptId || ppt.id}`
+  window.open(editorUrl, '_blank')
 }
 
 const previewPPT = (ppt: PPT) => {
