@@ -198,3 +198,133 @@ export interface WorkspaceStats {
   templates: number
   resources: number
 }
+
+/**
+ * 增强的模板接口
+ */
+export interface EnhancedTemplate {
+  id: string
+  templateId: string
+  name: string
+  templateType: string
+  description: string
+  subject: string
+  gradeLevel: string
+  layoutType: string
+  visualStyle: string
+  teachingPurpose: string
+  difficultyLevel: 'BEGINNER' | 'BASIC' | 'INTERMEDIATE' | 'ADVANCED'
+  estimatedDuration: string
+  templateCategory: string
+  slideData: any
+  createdAt: string
+  updatedAt: string
+  elements: TemplateElement[]
+  tags: TemplateTag[]
+  thumbnail?: string
+  workspaceId?: string
+}
+
+/**
+ * 模板接口 - 扩展支持句子元素
+ */
+export interface Template {
+  id: string
+  templateId: string
+  name: string
+  description: string
+  thumbnail: string
+  category: string
+  templateType: string
+  subject: string
+  gradeLevel: string
+  layoutType: string
+  visualStyle: string
+  teachingPurpose: string
+  difficultyLevel: 'BEGINNER' | 'BASIC' | 'INTERMEDIATE' | 'ADVANCED'
+  estimatedDuration: string
+  templateCategory: string
+  tags: string[]
+  elements: TemplateElement[]
+  createdAt: string
+  updatedAt: string
+  isPopular: boolean
+  downloadCount: number
+}
+
+/**
+ * 模板元素接口
+ */
+export interface TemplateElement {
+  id: number
+  templateId: string
+  elementType: 'vocabulary' | 'image' | 'sentence' | 'text' | 'title' | 'question' | 'projectNumber'
+  elementCount: number
+  elementDescription: string
+  positionInfo?: {
+    x: number
+    y: number
+    width: number
+    height: number
+  }
+}
+
+/**
+ * 模板标签接口
+ */
+export interface TemplateTag {
+  id: number
+  templateId: string
+  tag: string
+}
+
+/**
+ * 模板搜索条件
+ */
+export interface TemplateSearchCriteria {
+  keyword?: string
+  subject?: string
+  gradeLevel?: string
+  templateCategory?: string
+  difficultyLevel?: string
+  elementTypes?: string[]
+  tags?: string[]
+  page?: number
+  size?: number
+}
+
+/**
+ * 模板创建/更新表单接口
+ */
+export interface TemplateFormData {
+  name: string
+  description: string
+  templateType: string
+  subject: string
+  gradeLevel: string
+  layoutType: string
+  visualStyle: string
+  teachingPurpose: string
+  difficultyLevel: string
+  estimatedDuration: string
+  templateCategory: string
+  tags: string[]
+  elements: Omit<TemplateElement, 'id' | 'templateId'>[]
+  slideData?: any
+}
+
+/**
+ * 模板搜索条件
+ */
+export interface TemplateSearchParams {
+  keyword?: string
+  subject?: string
+  gradeLevel?: string
+  templateCategory?: string
+  difficultyLevel?: string
+  elementTypes?: string[]
+  tags?: string[]
+  workspaceId?: string
+  page?: number
+  size?: number
+}
