@@ -397,7 +397,7 @@
                         {{ getStatusText(ppt.status) }}
                       </span>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ ppt.createdAt }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ formatToBeijingTimeShort(ppt.createdAt) }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div class="flex items-center space-x-2">
                         <button 
@@ -613,6 +613,7 @@ import { useWorkspaceStore } from '@/stores/workspace'
 import Sidebar from '@/components/Sidebar.vue'
 import * as pptAPI from '@/api/pptManagement'
 import type { PPTInfo, PPTStatus } from '@/api/pptManagement'
+import { formatToBeijingTimeShort } from '@/utils/dateUtils'
 
 // 定义PPT接口（扩展API接口）
 interface PPT extends PPTInfo {
@@ -674,8 +675,8 @@ const loadPPTList = async () => {
         chapter: item.chapter || '未知章节',
         slides: item.slideCount,
         status: item.status,
-        createdAt: item.createdAt ? item.createdAt.split('T')[0] : new Date().toISOString().split('T')[0], // 格式化日期
-        updatedAt: item.updatedAt ? item.updatedAt.split('T')[0] : new Date().toISOString().split('T')[0],
+        createdAt: item.createdAt || new Date().toISOString(),
+        updatedAt: item.updatedAt || new Date().toISOString(),
         workspaceId: currentWorkspace?.id || '1',
         pptId: item.pptId,
         title: item.title,

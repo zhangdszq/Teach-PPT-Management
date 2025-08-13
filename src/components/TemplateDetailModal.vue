@@ -337,17 +337,12 @@ const getElementTypeName = (type: string) => {
   return names[type as keyof typeof names] || type
 }
 
-// 格式化日期
+// 导入时间格式化工具
+import { formatToBeijingTimeShort } from '@/utils/dateUtils'
+
+// 格式化日期（使用北京时间）
 const formatDate = (dateString: string) => {
-  if (!dateString) return '未知'
-  const date = new Date(dateString)
-  return date.toLocaleString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
+  return formatToBeijingTimeShort(dateString)
 }
 
 // 格式化幻灯片数据

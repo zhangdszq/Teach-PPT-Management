@@ -325,9 +325,12 @@ const deleteDraft = async (draftId: string) => {
   }
 }
 
+// 导入时间格式化工具
+import { formatToBeijingTimeShort } from '@/utils/dateUtils'
+
 // 工具函数
 const formatTime = (timestamp: number) => {
-  return new Date(timestamp).toLocaleString('zh-CN')
+  return formatToBeijingTimeShort(new Date(timestamp).toISOString())
 }
 
 const formatBytes = (bytes: number) => {

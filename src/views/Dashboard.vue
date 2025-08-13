@@ -143,7 +143,7 @@
             <div class="flex items-center justify-between">
               <h3 class="text-lg font-medium text-gray-900">最近项目</h3>
               <router-link 
-                to="/textbooks" 
+                to="/ppt-management" 
                 class="text-blue-600 hover:text-blue-800 text-sm font-medium"
               >
                 查看全部
@@ -168,7 +168,7 @@
                 <p class="text-sm text-gray-600 mb-1">{{ project.subject }} · {{ project.chapter }}</p>
                 <div class="flex items-center justify-between text-sm text-gray-500">
                   <span>{{ project.slides }}页</span>
-                  <span>{{ project.createdAt }}</span>
+                  <span>{{ formatToBeijingTimeShort(project.createdAt) }}</span>
                 </div>
               </div>
             </div>
@@ -196,7 +196,9 @@
 import { ref, computed, onMounted } from 'vue'
 import { useWorkspaceStore } from '@/stores/workspace'
 import { useRouter } from 'vue-router'
-import { mockAPI, type Project } from '@/api/mock'
+import type { Project } from '@/api/types'
+import { getWorkspaceStats, getPptList } from '@/api/templateManagement'
+import { formatToBeijingTimeShort } from '@/utils/dateUtils'
 import Sidebar from '@/components/Sidebar.vue'
 
 interface WorkspaceStats {
@@ -227,21 +229,61 @@ const loadWorkspaceData = async (workspaceId: string) => {
   try {
     loading.value = true
     
-    // 并行加载所有数据
-    const [projectsData, statsData] = await Promise.all([
-      mockAPI.getProjectsByWorkspace(workspaceId),
-      mockAPI.getWorkspaceStats(workspaceId)
-    ])
+    // 获取PPT列表数据
+    const pptResponse = await getPptList({
+      workspaceId: workspaceId,
+      page: 1,
+      size: 10,
+      status: 'all'
+    })
     
-    recentProjects.value = projectsData.slice(0, 6) // 只显示最近6个项目
-    currentWorkspaceStats.value = statsData || {
-      textbooks: 0,
-      ppts: projectsData.length,
-      templates: 0,
-      resources: 0
+    if (pptResponse.success && pptResponse.data) {
+        // 将PPT数据转换为Project格式
+        const pptList = Array.isArray(pptResponse.data) ? pptResponse.data : []
+        recentProjects.value = pptList.slice(0, 6).map(ppt => ({
+          id: ppt.id?.toString() || ppt.pptId,
+          name: ppt.title || ppt.name || '未命名PPT',
+          subject: ppt.subject || '未知科目',
+          chapter: ppt.chapter || '未知章节',
+          slides: ppt.slideCount || ppt.slides || 0,
+          createdAt: ppt.createTime || ppt.createdAt || new Date().toISOString(),
+          workspaceId: ppt.workspaceId || currentWorkspace?.id || '',
+          thumbnail: ppt.thumbnail || 'bg-gradient-to-br from-blue-500 to-purple-600',
+          status: (ppt.status === 'draft' || ppt.status === 'published' || ppt.status === 'archived') ? ppt.status : 'draft'
+        }))
+      } else {
+        recentProjects.value = []
+      }
+    
+    // 获取工作区统计数据
+    const statsResponse = await getWorkspaceStats(workspaceId)
+    
+    // 使用真实的API数据
+    if (statsResponse.success && statsResponse.data) {
+      currentWorkspaceStats.value = {
+        textbooks: statsResponse.data.textbooks,
+        ppts: statsResponse.data.ppts,
+        templates: statsResponse.data.templates,
+        resources: statsResponse.data.resources
+      }
+    } else {
+      // 如果API调用失败，使用默认值
+      currentWorkspaceStats.value = {
+        textbooks: 0,
+        ppts: recentProjects.value.length,
+        templates: 0,
+        resources: 0
+      }
     }
   } catch (error) {
     console.error('加载工作空间数据失败:', error)
+    // 错误时使用默认值
+    currentWorkspaceStats.value = {
+      textbooks: 0,
+      ppts: 0,
+      templates: 0,
+      resources: 0
+    }
   } finally {
     loading.value = false
   }

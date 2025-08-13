@@ -87,12 +87,7 @@ export const batchDeleteTemplates = async (ids: string[]): Promise<ApiResponse> 
   return await api.post('/ppt/management/templates/batch-delete', { ids })
 }
 
-/**
- * 复制模板
- */
-export const duplicateTemplate = async (id: string, newName?: string): Promise<ApiResponse<Template>> => {
-  return await api.post(`/ppt/management/templates/${id}/duplicate`, { templateName: newName })
-}
+
 
 /**
  * 获取模板元素列表
@@ -162,6 +157,45 @@ export const getTemplateStats = async (workspaceId?: string): Promise<ApiRespons
 }
 
 /**
+ * 获取工作空间统计信息
+ */
+export const getWorkspaceStats = async (workspaceId: string): Promise<ApiResponse<{
+  textbooks: number
+  ppts: number
+  templates: number
+  resources: number
+}>> => {
+  return await api.get(`/ppt/management/workspace-stats/${workspaceId}`)
+}
+
+/**
+ * 获取PPT列表
+ */
+export const getPptList = async (params: {
+  status?: string // all/draft/published/archived
+  page?: number
+  size?: number
+  workspaceId?: string
+}): Promise<ApiResponse<{
+  list: Array<{
+    id: string
+    name: string
+    subject: string
+    chapter: string
+    slides: number
+    createdAt: string
+    status: string
+    workspaceId: string
+    thumbnail?: string
+  }>
+  total: number
+  page: number
+  size: number
+}>> => {
+  return await api.get('/ppt/management/list', { params })
+}
+
+/**
  * 导出模板
  */
 export const exportTemplate = async (id: string): Promise<ApiResponse<{ downloadUrl: string }>> => {
@@ -192,13 +226,14 @@ export default {
   updateTemplate,
   deleteTemplate,
   batchDeleteTemplates,
-  duplicateTemplate,
   getTemplateElements,
   updateTemplateElements,
   getTemplateTags,
   updateTemplateTags,
   getAllTags,
   getTemplateStats,
+  getWorkspaceStats,
+  getPptList,
   exportTemplate,
   importTemplate
 }

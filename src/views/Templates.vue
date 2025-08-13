@@ -62,6 +62,28 @@
               筛选
             </button>
             
+            <!-- 视图切换 -->
+            <div class="flex bg-gray-100 rounded-lg p-1">
+              <button 
+                @click="viewMode = 'grid'"
+                :class="[
+                  'px-3 py-1 text-sm rounded-md transition-colors',
+                  viewMode === 'grid' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+                ]"
+              >
+                网格
+              </button>
+              <button 
+                @click="viewMode = 'list'"
+                :class="[
+                  'px-3 py-1 text-sm rounded-md transition-colors',
+                  viewMode === 'list' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+                ]"
+              >
+                列表
+              </button>
+            </div>
+            
             <!-- 新建模板按钮 -->
             <button 
               @click="showCreateModal = true"
@@ -156,93 +178,205 @@
           <span class="ml-2 text-gray-600">加载中...</span>
         </div>
         
-        <!-- 模板网格 -->
-        <div v-else-if="templates.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          <!-- 动态模板卡片 -->
-          <div 
-            v-for="template in templates" 
-            :key="template.id"
-            class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow cursor-pointer group"
-          >
-            <div class="aspect-video bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center relative">
-              <span class="text-white text-lg font-medium">{{ template.templateCategory }}</span>
+        <!-- 模板展示 -->
+        <div v-else-if="templates.length > 0">
+          <!-- 网格视图 -->
+          <div v-if="viewMode === 'grid'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <!-- 动态模板卡片 -->
+            <div 
+              v-for="template in templates" 
+              :key="template.id"
+              class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow cursor-pointer group"
+            >
+              <div class="aspect-video bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center relative">
+                <span class="text-white text-lg font-medium">{{ template.templateCategory }}</span>
+                
+                <!-- 操作按钮 -->
+                <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div class="flex space-x-1">
+                    <button 
+                      @click.stop="viewTemplate(template)"
+                      class="p-1 bg-white bg-opacity-20 rounded hover:bg-opacity-30 transition-colors"
+                      title="查看详情"
+                    >
+                      <svg class="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                    </button>
+                    <button 
+                      @click.stop="editTemplate(template)"
+                      class="p-1 bg-white bg-opacity-20 rounded hover:bg-opacity-30 transition-colors"
+                      title="编辑模板"
+                    >
+                      <svg class="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                    </button>
+
+                    <button 
+                      @click.stop="confirmDeleteTemplate(template)"
+                      class="p-1 bg-white bg-opacity-20 rounded hover:bg-opacity-30 transition-colors"
+                      title="删除模板"
+                    >
+                      <svg class="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
               
-              <!-- 操作按钮 -->
-              <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <div class="flex space-x-1">
-                  <button 
-                    @click.stop="viewTemplate(template)"
-                    class="p-1 bg-white bg-opacity-20 rounded hover:bg-opacity-30 transition-colors"
-                    title="查看详情"
+              <div class="p-4">
+                <h3 class="font-medium text-gray-900 mb-1 truncate">{{ template.name }}</h3>
+                <p class="text-sm text-gray-600 mb-3 line-clamp-2">{{ template.description }}</p>
+                
+                <!-- 元素统计 -->
+                <div class="flex flex-wrap gap-1 mb-3">
+                  <span 
+                    v-for="element in template.elements" 
+                    :key="element.id"
+                    class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded"
                   >
-                    <svg class="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                  </button>
-                  <button 
-                    @click.stop="editTemplate(template)"
-                    class="p-1 bg-white bg-opacity-20 rounded hover:bg-opacity-30 transition-colors"
-                    title="编辑模板"
+                    {{ getElementTypeLabel(element.elementType) }}: {{ element.elementCount }}
+                  </span>
+                </div>
+                
+                <!-- 标签 -->
+                <div class="flex flex-wrap gap-1 mb-3">
+                  <span 
+                    v-for="tag in (template.tags || []).slice(0, 3)" 
+                    :key="tag"
+                    class="px-2 py-1 bg-blue-100 text-blue-600 text-xs rounded"
                   >
-                    <svg class="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                  </button>
+                    {{ tag }}
+                  </span>
+                  <span v-if="(template.tags || []).length > 3" class="text-xs text-gray-500">
+                    +{{ (template.tags || []).length - 3 }}
+                  </span>
+                </div>
+                
+                <div class="flex items-center justify-between">
+                  <div class="text-xs text-gray-500">
+                    <div>{{ template.subject }} · {{ template.gradeLevel }}</div>
+                    <div>{{ formatToBeijingTimeShort(template.createdAt) }}</div>
+                  </div>
                   <button 
-                    @click.stop="duplicateTemplate(template)"
-                    class="p-1 bg-white bg-opacity-20 rounded hover:bg-opacity-30 transition-colors"
-                    title="复制模板"
+                    @click="useTemplate(template)"
+                    class="text-primary-600 hover:text-primary-700 text-sm font-medium"
                   >
-                    <svg class="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                    </svg>
+                    使用模板
                   </button>
                 </div>
               </div>
             </div>
-            
-            <div class="p-4">
-              <h3 class="font-medium text-gray-900 mb-1 truncate">{{ template.name }}</h3>
-              <p class="text-sm text-gray-600 mb-3 line-clamp-2">{{ template.description }}</p>
-              
-              <!-- 元素统计 -->
-              <div class="flex flex-wrap gap-1 mb-3">
-                <span 
-                  v-for="element in template.elements" 
-                  :key="element.id"
-                  class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded"
-                >
-                  {{ getElementTypeLabel(element.elementType) }}: {{ element.elementCount }}
-                </span>
-              </div>
-              
-              <!-- 标签 -->
-              <div class="flex flex-wrap gap-1 mb-3">
-                <span 
-                  v-for="tag in (template.tags || []).slice(0, 3)" 
-                  :key="tag"
-                  class="px-2 py-1 bg-blue-100 text-blue-600 text-xs rounded"
-                >
-                  {{ tag }}
-                </span>
-                <span v-if="(template.tags || []).length > 3" class="text-xs text-gray-500">
-                  +{{ (template.tags || []).length - 3 }}
-                </span>
-              </div>
-              
-              <div class="flex items-center justify-between">
-                <div class="text-xs text-gray-500">
-                  <div>{{ template.subject }} · {{ template.gradeLevel }}</div>
-                  <div>{{ formatDate(template.createdAt) }}</div>
-                </div>
-                <button 
-                  @click="useTemplate(template)"
-                  class="text-primary-600 hover:text-primary-700 text-sm font-medium"
-                >
-                  使用模板
-                </button>
-              </div>
+          </div>
+          
+          <!-- 列表视图 -->
+          <div v-else class="bg-white rounded-lg shadow-sm border border-gray-200">
+            <div class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">模板信息</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">学科/年级</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">元素统计</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">标签</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">创建时间</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  <tr 
+                    v-for="template in templates" 
+                    :key="template.id"
+                    class="hover:bg-gray-50 cursor-pointer"
+                    @click="viewTemplate(template)"
+                  >
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="flex items-center">
+                        <div class="flex-shrink-0 h-12 w-12">
+                          <div class="h-12 w-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                            <span class="text-white text-xs font-bold">{{ template.templateCategory?.slice(0, 2) || '模板' }}</span>
+                          </div>
+                        </div>
+                        <div class="ml-4">
+                          <div class="text-sm font-medium text-gray-900">{{ template.name }}</div>
+                          <div class="text-sm text-gray-500 max-w-xs truncate">{{ template.description }}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="text-sm text-gray-900">{{ template.subject }}</div>
+                      <div class="text-sm text-gray-500">{{ template.gradeLevel }}</div>
+                    </td>
+                    <td class="px-6 py-4">
+                      <div class="flex flex-wrap gap-1">
+                        <span 
+                          v-for="element in (template.elements || []).slice(0, 3)" 
+                          :key="element.id"
+                          class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded"
+                        >
+                          {{ getElementTypeLabel(element.elementType) }}: {{ element.elementCount }}
+                        </span>
+                        <span v-if="(template.elements || []).length > 3" class="text-xs text-gray-500">
+                          +{{ (template.elements || []).length - 3 }}
+                        </span>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4">
+                      <div class="flex flex-wrap gap-1">
+                        <span 
+                          v-for="tag in (template.tags || []).slice(0, 2)" 
+                          :key="tag"
+                          class="px-2 py-1 bg-blue-100 text-blue-600 text-xs rounded"
+                        >
+                          {{ tag }}
+                        </span>
+                        <span v-if="(template.tags || []).length > 2" class="text-xs text-gray-500">
+                          +{{ (template.tags || []).length - 2 }}
+                        </span>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {{ formatToBeijingTimeShort(template.createdAt) }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div class="flex items-center space-x-3">
+                        <button 
+                          @click.stop="useTemplate(template)"
+                          class="text-green-600 hover:text-green-700"
+                          title="使用模板"
+                        >
+                          使用
+                        </button>
+                        <button 
+                          @click.stop="viewTemplate(template)"
+                          class="text-blue-600 hover:text-blue-700"
+                          title="查看详情"
+                        >
+                          查看
+                        </button>
+                        <button 
+                          @click.stop="editTemplate(template)"
+                          class="text-orange-600 hover:text-orange-700"
+                          title="编辑模板"
+                        >
+                          编辑
+                        </button>
+
+                        <button 
+                          @click.stop="confirmDeleteTemplate(template)"
+                          class="text-red-600 hover:text-red-700"
+                          title="删除模板"
+                        >
+                          删除
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
@@ -316,6 +450,41 @@
       @edit="editTemplate"
       @duplicate="duplicateTemplate"
     />
+    
+    <!-- 删除确认对话框 -->
+    <div v-if="showDeleteConfirm" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+        <div class="flex items-center mb-4">
+          <div class="flex-shrink-0">
+            <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <div class="ml-3">
+            <h3 class="text-lg font-medium text-gray-900">确认删除模板</h3>
+          </div>
+        </div>
+        <div class="mb-4">
+          <p class="text-sm text-gray-500">
+            您确定要删除模板 "{{ deletingTemplate?.name }}" 吗？此操作无法撤销。
+          </p>
+        </div>
+        <div class="flex justify-end space-x-3">
+          <button 
+            @click="cancelDelete"
+            class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            取消
+          </button>
+          <button 
+            @click="handleDeleteTemplate"
+            class="px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+          >
+            删除
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -325,12 +494,12 @@ import { useWorkspaceStore } from '@/stores/workspace'
 import Sidebar from '@/components/Sidebar.vue'
 import TemplateModal from '@/components/TemplateModal.vue'
 import TemplateDetailModal from '@/components/TemplateDetailModal.vue'
+import { formatToBeijingTimeShort } from '@/utils/dateUtils'
 import { 
   getTemplates, 
   createTemplate, 
   updateTemplate, 
-  deleteTemplate,
-  duplicateTemplate as apiDuplicateTemplate
+  deleteTemplate
 } from '@/api/templateManagement'
 import type { Template, TemplateSearchCriteria } from '@/api/types'
 
@@ -347,8 +516,11 @@ const showFilters = ref(false)
 const showCreateModal = ref(false)
 const showEditModal = ref(false)
 const showDetailModal = ref(false)
+const showDeleteConfirm = ref(false)
 const editingTemplate = ref<Template | null>(null)
 const viewingTemplate = ref<Template | null>(null)
+const deletingTemplate = ref<Template | null>(null)
+const viewMode = ref<'grid' | 'list'>('grid')
 
 // 分页数据
 const currentPage = ref(1)
@@ -462,8 +634,8 @@ const applyFilters = () => {
   loadTemplates()
 }
 
-const changePage = (page: number) => {
-  currentPage.value = page
+const changePage = (page: string | number) => {
+  currentPage.value = typeof page === 'string' ? parseInt(page) : page
   loadTemplates()
 }
 
@@ -473,28 +645,41 @@ const viewTemplate = (template: Template) => {
 }
 
 const editTemplate = (template: Template) => {
-  editingTemplate.value = { ...template }
+  editingTemplate.value = { ...template } as Template
   showEditModal.value = true
   showDetailModal.value = false
 }
 
-const duplicateTemplate = async (template: Template) => {
-  try {
-    const newName = prompt('请输入新模板名称:', `${template.name} - 副本`)
-    if (newName) {
-      const response = await apiDuplicateTemplate(template.templateId, newName)
-      if (response.success) {
-        loadTemplates()
-      }
-    }
-  } catch (error) {
-    console.error('复制模板失败:', error)
-  }
-}
+
 
 const useTemplate = (template: Template) => {
   // 跳转到PPT创建页面，使用该模板
   console.log('使用模板:', template)
+}
+
+const confirmDeleteTemplate = (template: Template) => {
+  deletingTemplate.value = template
+  showDeleteConfirm.value = true
+}
+
+const handleDeleteTemplate = async () => {
+  if (!deletingTemplate.value) return
+  
+  try {
+    const response = await deleteTemplate(deletingTemplate.value.templateId)
+    if (response.success) {
+      loadTemplates()
+      showDeleteConfirm.value = false
+      deletingTemplate.value = null
+    }
+  } catch (error) {
+    console.error('删除模板失败:', error)
+  }
+}
+
+const cancelDelete = () => {
+  showDeleteConfirm.value = false
+  deletingTemplate.value = null
 }
 
 const closeModal = () => {
@@ -530,9 +715,7 @@ const getElementTypeLabel = (type: string) => {
   return elementType ? elementType.label : type
 }
 
-const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString('zh-CN')
-}
+// formatDate函数已被formatToBeijingTimeShort替代
 
 // 监听当前工作空间变化
 watch(() => currentWorkspace, () => {
