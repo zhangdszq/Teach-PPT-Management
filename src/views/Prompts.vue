@@ -96,50 +96,88 @@
         </div>
         
         <!-- Prompt列表 -->
-        <div v-else class="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-6">
+        <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 md:gap-6">
           <div 
             v-for="prompt in filteredPrompts" 
             :key="prompt.id"
-            class="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
+            class="group bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-lg transition-all duration-200 relative overflow-hidden"
           >
-            <div class="p-4">
-              <div class="flex items-start justify-between mb-3">
-                <div class="flex-1">
-                  <h3 class="font-medium text-gray-900 mb-1">Prompt #{{ prompt.id }}</h3>
-                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" 
-                        :class="getPromptTypeClass(prompt.promType)">
-                    {{ getPromptTypeLabel(prompt.promType) }}
-                  </span>
-                </div>
-              </div>
-              
-              <div class="mb-4">
-                <p class="text-sm text-gray-600 line-clamp-3 break-words overflow-hidden">{{ prompt.prompt }}</p>
-              </div>
-            </div>
-            
-            <div class="px-4 py-3 bg-gray-50 border-t border-gray-200 flex justify-end space-x-2">
+            <!-- 操作按钮 - 悬停时显示 -->
+            <div class="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10 flex space-x-1">
               <button 
                 @click="copyPromptContent(prompt.prompt)"
-                class="text-green-600 hover:text-green-700 text-sm font-medium transition-colors"
+                class="p-1.5 bg-white rounded-full shadow-md hover:bg-green-50 transition-colors"
                 title="复制内容"
               >
-                复制
+                <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                </svg>
               </button>
               <button 
                 @click="openEditModal(prompt)"
-                class="text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors"
+                class="p-1.5 bg-white rounded-full shadow-md hover:bg-blue-50 transition-colors"
                 title="编辑"
               >
-                编辑
+                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                </svg>
               </button>
               <button 
                 @click="deletePrompt(prompt.id)"
-                class="text-red-600 hover:text-red-700 text-sm font-medium transition-colors"
+                class="p-1.5 bg-white rounded-full shadow-md hover:bg-red-50 transition-colors"
                 title="删除"
               >
-                删除
+                <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
               </button>
+            </div>
+
+            <!-- 图片区域 -->
+            <div class="relative h-32 bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+              <!-- Prompt类型图标 -->
+              <div class="text-center">
+                <div class="w-12 h-12 mx-auto mb-2 rounded-full flex items-center justify-center" :class="getPromptTypeIconBg(prompt.promType)">
+                  <svg class="w-6 h-6" :class="getPromptTypeIconColor(prompt.promType)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path v-if="prompt.promType === 'system'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                    <path v-else-if="prompt.promType === 'user'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                    <path v-else-if="prompt.promType === 'assistant'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                    <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                  </svg>
+                </div>
+                <!-- 类型标签 -->
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium" 
+                      :class="getPromptTypeClass(prompt.promType)">
+                  {{ getPromptTypeLabel(prompt.promType) }}
+                </span>
+              </div>
+            </div>
+
+            <!-- 卡片内容 -->
+            <div class="p-4">
+              <!-- 标题 -->
+              <h3 class="text-lg font-semibold text-gray-900 mb-2 line-clamp-1">Prompt #{{ prompt.id }}</h3>
+              
+              <!-- Prompt内容预览 -->
+              <p class="text-sm text-gray-600 line-clamp-3 mb-3">{{ prompt.prompt }}</p>
+              
+              <!-- 统计信息 -->
+               <div class="mt-3 pt-3 border-t border-gray-100">
+                 <div class="flex items-center justify-between text-xs text-gray-500">
+                   <span class="flex items-center">
+                     <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"></path>
+                     </svg>
+                     {{ prompt.prompt.length }} 字符
+                   </span>
+                   <span class="flex items-center">
+                     <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                     </svg>
+                     最近更新
+                   </span>
+                 </div>
+               </div>
             </div>
           </div>
         </div>
@@ -492,6 +530,32 @@ const getPromptTypeClass = (promType: string): string => {
     'custom': 'bg-orange-100 text-orange-800'
   }
   return classMap[promType] || 'bg-gray-100 text-gray-800'
+}
+
+/**
+ * 获取Prompt类型图标背景样式
+ */
+const getPromptTypeIconBg = (promType: string): string => {
+  const classMap: Record<string, string> = {
+    'system': 'bg-blue-200',
+    'user': 'bg-green-200',
+    'assistant': 'bg-purple-200',
+    'custom': 'bg-orange-200'
+  }
+  return classMap[promType] || 'bg-gray-200'
+}
+
+/**
+ * 获取Prompt类型图标颜色样式
+ */
+const getPromptTypeIconColor = (promType: string): string => {
+  const classMap: Record<string, string> = {
+    'system': 'text-blue-600',
+    'user': 'text-green-600',
+    'assistant': 'text-purple-600',
+    'custom': 'text-orange-600'
+  }
+  return classMap[promType] || 'text-gray-600'
 }
 
 // 组件挂载时加载数据

@@ -44,7 +44,7 @@
             
             <div class="relative">
               <button class="flex items-center space-x-2 text-gray-700 hover:text-gray-900">
-                <div class="w-8 h-8 bg-gray-300 rounded-full"></div>
+                <img src="https://s.vipkidstatic.com/fe-static/temp/rudy.jpg" alt="用户头像" class="w-8 h-8 rounded-full object-cover" />
                 <span class="text-sm font-medium">用户</span>
               </button>
             </div>

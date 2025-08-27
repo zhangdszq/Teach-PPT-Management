@@ -47,7 +47,7 @@
             </button>
             
             <!-- 用户菜单 -->
-            <div class="w-8 h-8 bg-gray-300 rounded-full"></div>
+            <img src="https://s.vipkidstatic.com/fe-static/temp/rudy.jpg" alt="用户头像" class="w-8 h-8 rounded-full object-cover" />
           </div>
         </div>
       </div>
@@ -119,40 +119,82 @@
         <!-- 教材列表 -->
         <div v-else>
           <!-- 网格视图 -->
-          <div v-if="viewMode === 'grid'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div v-if="viewMode === 'grid'" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 md:gap-6">
             <div 
               v-for="textbook in filteredTextbooks" 
               :key="textbook.id"
               @click="selectTextbook(textbook)"
-              class="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow cursor-pointer"
+              class="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 cursor-pointer relative group"
             >
-              <div class="p-4">
-                <div class="w-full h-32 bg-gray-100 rounded-lg mb-3 flex items-center justify-center">
-                  <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-                  </svg>
-                </div>
-                <h3 class="font-medium text-gray-900 mb-1">{{ textbook.name }}</h3>
-                <p class="text-sm text-gray-500 mb-2">{{ textbook.subject }} · {{ textbook.grade }}</p>
-                <div class="flex items-center justify-between text-xs text-gray-400">
-                  <span>{{ textbook.unitCount || 0 }} 个单元</span>
-                  <span>{{ textbook.pptCount }} 个PPT</span>
+              <!-- 右上角操作按钮 -->
+              <div class="absolute top-3 right-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                <div class="flex items-center space-x-1 bg-white rounded-lg shadow-sm border border-gray-200 p-1">
+                  <button 
+                    @click.stop="editTextbook(textbook)"
+                    class="text-gray-400 hover:text-blue-600 p-1.5 transition-colors rounded"
+                    title="编辑教材"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                    </svg>
+                  </button>
+                  <button 
+                    @click.stop="deleteTextbook(textbook.id)"
+                    class="text-gray-400 hover:text-red-600 p-1.5 transition-colors rounded"
+                    title="删除教材"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                  </button>
                 </div>
               </div>
               
-              <div class="px-4 py-3 bg-gray-50 border-t border-gray-200 flex justify-end space-x-2">
-                <button 
-                  @click.stop="editTextbook(textbook)"
-                  class="text-blue-600 hover:text-blue-700 text-sm font-medium"
-                >
-                  编辑
-                </button>
-                <button 
-                  @click.stop="deleteTextbook(textbook.id)"
-                  class="text-red-600 hover:text-red-700 text-sm font-medium"
-                >
-                  删除
-                </button>
+              <!-- 教材封面 -->
+              <div class="aspect-[4/3] bg-gradient-to-br from-blue-50 to-indigo-100 rounded-t-lg flex items-center justify-center relative overflow-hidden">
+                <svg class="w-16 h-16 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                </svg>
+                <!-- 学科标签 -->
+                <div class="absolute top-3 left-3">
+                  <span class="px-2 py-1 text-xs font-medium bg-white/90 text-gray-700 rounded-full">
+                    {{ textbook.subject }}
+                  </span>
+                </div>
+              </div>
+              
+              <div class="p-4">
+                
+                <!-- 教材信息 -->
+                <div class="mb-3">
+                  <h3 class="font-semibold text-gray-900 text-lg leading-tight mb-2">{{ textbook.name }}</h3>
+                  <p class="text-sm text-gray-600">{{ textbook.grade }}</p>
+                </div>
+                
+                <!-- 统计信息 -->
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                  <div class="bg-gray-50 rounded-lg p-3 text-center">
+                    <div class="text-xl font-bold text-gray-900">{{ textbook.unitCount || 0 }}</div>
+                    <div class="text-xs text-gray-500 mt-1">单元</div>
+                  </div>
+                  <div class="bg-gray-50 rounded-lg p-3 text-center">
+                    <div class="text-xl font-bold text-gray-900">{{ textbook.pptCount }}</div>
+                    <div class="text-xs text-gray-500 mt-1">PPT</div>
+                  </div>
+                </div>
+                
+                <!-- 出版社信息 -->
+                <div class="flex items-center justify-between text-sm border-t border-gray-100 pt-3">
+                  <div class="flex items-center text-gray-500">
+                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                    </svg>
+                    {{ textbook.publisher }}
+                  </div>
+                  <div class="text-xs text-gray-400">
+                    最近更新
+                  </div>
+                </div>
               </div>
             </div>
           </div>
