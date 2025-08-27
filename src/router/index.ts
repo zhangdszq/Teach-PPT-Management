@@ -59,6 +59,14 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    path: '/prompts',
+    name: 'Prompts',
+    component: () => import('@/views/Prompts.vue'),
+    meta: {
+      title: 'Prompt管理'
+    }
+  },
+  {
     path: '/create',
     name: 'Create',
     component: () => import('@/views/Create.vue'),

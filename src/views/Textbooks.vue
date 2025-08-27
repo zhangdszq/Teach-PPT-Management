@@ -2,40 +2,30 @@
   <div class="min-h-screen bg-gray-50">
     <!-- 侧边栏 -->
     <Sidebar />
-
-
+    
     <!-- 主内容区域 -->
-    <main class="ml-64">
+    <div class="ml-64 flex flex-col min-h-screen">
       <!-- 顶部导航栏 -->
-      <header class="bg-white shadow-sm border-b border-gray-200">
-        <div class="flex items-center justify-between px-6 py-4">
-          <div>
-            <div class="flex items-center space-x-4 mb-2">
-              <h2 class="text-2xl font-bold text-gray-900">教材管理</h2>
-              <!-- 工作空间选择器 -->
-              <div class="relative">
-                <select 
-                  v-model="selectedWorkspaceId" 
-                  @change="handleWorkspaceChange"
-                  class="bg-blue-50 border border-blue-200 text-blue-800 text-sm rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="" disabled>选择工作空间</option>
-                  <option 
-                    v-for="workspace in workspaces" 
-                    :key="workspace.id" 
-                    :value="workspace.id"
-                  >
-                    {{ workspace.name }}
-                  </option>
-                </select>
-              </div>
-            </div>
-            <p class="text-sm text-gray-600">
-              {{ currentWorkspaceName }} - 管理各学科教材和相关PPT内容
-            </p>
+      <div class="bg-white border-b border-gray-200 px-6 py-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-4">
+            <h1 class="text-2xl font-bold text-gray-900">教材管理</h1>
+            
+            <!-- 工作空间选择器 -->
+            <select 
+              v-model="selectedWorkspaceId" 
+              @change="handleWorkspaceChange"
+              class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">选择工作空间</option>
+              <option v-for="workspace in workspaces" :key="workspace.id" :value="workspace.id">
+                {{ workspace.name }}
+              </option>
+            </select>
           </div>
           
           <div class="flex items-center space-x-4">
+            <!-- 搜索框 -->
             <div class="relative">
               <input 
                 v-model="searchQuery"
@@ -43,188 +33,173 @@
                 placeholder="搜索教材..." 
                 class="w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
-              <svg class="absolute left-3 top-2.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
               </svg>
             </div>
             
+            <!-- 添加教材按钮 -->
             <button 
               @click="showCreateModal = true"
-              :disabled="loading"
-              class="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+              class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
             >
               + 添加教材
             </button>
             
-            <div class="relative">
-              <button class="flex items-center space-x-2 text-gray-700 hover:text-gray-900">
-                <div class="w-8 h-8 bg-gray-300 rounded-full"></div>
-                <span class="text-sm font-medium">用户</span>
-              </button>
-            </div>
+            <!-- 用户菜单 -->
+            <div class="w-8 h-8 bg-gray-300 rounded-full"></div>
           </div>
         </div>
-      </header>
-
-      <!-- 教材内容 -->
-      <div class="p-6">
+      </div>
+      
+      <!-- 教材内容区域 -->
+      <div class="flex-1 p-6 overflow-auto">
         <!-- 筛选器 -->
-        <div class="flex items-center justify-between mb-6">
-          <div class="flex items-center space-x-4">
-            <select v-model="filters.subject" class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
-              <option value="">所有学科</option>
-              <option value="英语">英语</option>
-              <option value="物理">物理</option>
-              <option value="化学">化学</option>
-              <option value="语文">语文</option>
-              <option value="数学">数学</option>
-            </select>
-            
-            <select v-model="filters.grade" class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
-              <option value="">所有年级</option>
-              <option value="高一">高一</option>
-              <option value="高二">高二</option>
-              <option value="高三">高三</option>
-            </select>
-            
-            <select v-model="filters.version" class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
-              <option value="">所有版本</option>
-              <option value="人教版">人教版</option>
-              <option value="苏教版">苏教版</option>
-              <option value="北师大版">北师大版</option>
-              <option value="沪教版">沪教版</option>
-            </select>
-          </div>
+        <div class="mb-6 flex items-center space-x-4">
+          <select v-model="filters.subject" class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+            <option value="">所有学科</option>
+            <option value="英语">英语</option>
+            <option value="物理">物理</option>
+            <option value="化学">化学</option>
+            <option value="语文">语文</option>
+            <option value="数学">数学</option>
+          </select>
           
-          <div class="flex items-center space-x-2">
+          <select v-model="filters.grade" class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+            <option value="">所有年级</option>
+            <option value="1年级">1年级</option>
+            <option value="2年级">2年级</option>
+            <option value="3年级">3年级</option>
+            <option value="4年级">4年级</option>
+            <option value="5年级">5年级</option>
+            <option value="6年级">6年级</option>
+            <option value="初一">初一</option>
+            <option value="初二">初二</option>
+            <option value="初三">初三</option>
+          </select>
+          
+          <select v-model="filters.version" class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+            <option value="">所有版本</option>
+            <option value="人民教育出版社">人民教育出版社</option>
+            <option value="江苏教育出版社">江苏教育出版社</option>
+            <option value="北京师范大学出版社">北京师范大学出版社</option>
+            <option value="外语教学与研究出版社">外语教学与研究出版社</option>
+            <option value="牛津大学出版社">牛津大学出版社</option>
+          </select>
+          
+          <div class="flex-1"></div>
+          
+          <!-- 视图切换 -->
+          <div class="flex border border-gray-300 rounded-lg overflow-hidden">
             <button 
-              :class="viewMode === 'grid' ? 'bg-blue-100 text-blue-600' : 'text-gray-600 hover:text-gray-900'"
               @click="viewMode = 'grid'"
-              class="p-2 rounded-lg transition-colors"
+              :class="['px-3 py-2 text-sm', viewMode === 'grid' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50']"
             >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
-              </svg>
+              网格
             </button>
             <button 
-              :class="viewMode === 'list' ? 'bg-blue-100 text-blue-600' : 'text-gray-600 hover:text-gray-900'"
               @click="viewMode = 'list'"
-              class="p-2 rounded-lg transition-colors"
+              :class="['px-3 py-2 text-sm border-l border-gray-300', viewMode === 'list' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50']"
             >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
-              </svg>
+              列表
             </button>
           </div>
         </div>
-
-        <!-- 网格视图 -->
-        <div v-if="viewMode === 'grid'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          <!-- 教材卡片 -->
-          <div 
-            v-for="textbook in filteredTextbooks" 
-            :key="textbook.id"
-            class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
-            @click="selectTextbook(textbook)"
-          >
-            <div class="aspect-[3/4] bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
-              <div class="text-center text-white p-4">
-                <svg class="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-                </svg>
-                <h4 class="font-bold text-lg">{{ textbook.subject }}</h4>
-                <p class="text-sm opacity-90">{{ textbook.grade }}</p>
-              </div>
-            </div>
-            
-            <div class="p-4">
-              <h3 class="font-semibold text-gray-900 mb-2">{{ textbook.name }}</h3>
-              <div class="space-y-1 text-sm text-gray-600">
-                <div class="flex justify-between">
-                  <span>版本:</span>
-                  <span>{{ textbook.version }}</span>
+        
+        <!-- 加载状态 -->
+        <div v-if="loading" class="flex items-center justify-center py-12">
+          <div class="text-gray-500">加载中...</div>
+        </div>
+        
+        <!-- 错误状态 -->
+        <div v-else-if="error" class="flex items-center justify-center py-12">
+          <div class="text-red-500">{{ error }}</div>
+        </div>
+        
+        <!-- 教材列表 -->
+        <div v-else>
+          <!-- 网格视图 -->
+          <div v-if="viewMode === 'grid'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div 
+              v-for="textbook in filteredTextbooks" 
+              :key="textbook.id"
+              @click="selectTextbook(textbook)"
+              class="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow cursor-pointer"
+            >
+              <div class="p-4">
+                <div class="w-full h-32 bg-gray-100 rounded-lg mb-3 flex items-center justify-center">
+                  <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                  </svg>
                 </div>
-                <div class="flex justify-between">
-                  <span>章节:</span>
-                  <span>{{ textbook.chapterCount }}章</span>
-                </div>
-                <div class="flex justify-between">
-                  <span>PPT:</span>
-                  <span>{{ textbook.pptCount }}个</span>
+                <h3 class="font-medium text-gray-900 mb-1">{{ textbook.name }}</h3>
+                <p class="text-sm text-gray-500 mb-2">{{ textbook.subject }} · {{ textbook.grade }}</p>
+                <div class="flex items-center justify-between text-xs text-gray-400">
+                  <span>{{ textbook.unitCount || 0 }} 个单元</span>
+                  <span>{{ textbook.pptCount }} 个PPT</span>
                 </div>
               </div>
               
-              <div class="mt-4 pt-3 border-t border-gray-200 flex justify-between items-center">
-                <span class="text-xs text-gray-500">{{ textbook.lastUpdated }}</span>
-                <div class="flex space-x-1">
-                  <button class="text-gray-400 hover:text-blue-600 p-1">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                    </svg>
-                  </button>
-                  <button class="text-gray-400 hover:text-red-600 p-1">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                    </svg>
-                  </button>
-                </div>
+              <div class="px-4 py-3 bg-gray-50 border-t border-gray-200 flex justify-end space-x-2">
+                <button 
+                  @click.stop="editTextbook(textbook)"
+                  class="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                >
+                  编辑
+                </button>
+                <button 
+                  @click.stop="deleteTextbook(textbook.id)"
+                  class="text-red-600 hover:text-red-700 text-sm font-medium"
+                >
+                  删除
+                </button>
               </div>
             </div>
           </div>
-        </div>
-
-        <!-- 列表视图 -->
-        <div v-if="viewMode === 'list'" class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-            <div class="grid grid-cols-12 gap-4 text-sm font-medium text-gray-700">
-              <div class="col-span-4">教材名称</div>
-              <div class="col-span-2">学科</div>
-              <div class="col-span-1">年级</div>
-              <div class="col-span-2">版本</div>
-              <div class="col-span-1">章节</div>
-              <div class="col-span-1">PPT数</div>
-              <div class="col-span-1">操作</div>
-            </div>
-          </div>
           
-          <div class="divide-y divide-gray-200">
-            <div 
-              v-for="textbook in textbooks" 
-              :key="textbook.id"
-              class="px-6 py-4 hover:bg-gray-50 cursor-pointer"
-              @click="selectTextbook(textbook)"
-            >
-              <div class="grid grid-cols-12 gap-4 items-center">
-                <div class="col-span-4">
-                  <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                      <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 class="font-medium text-gray-900">{{ textbook.name }}</h3>
-                      <p class="text-sm text-gray-500">{{ textbook.lastUpdated }}</p>
-                    </div>
+          <!-- 列表视图 -->
+          <div v-else class="bg-white rounded-lg shadow-sm border border-gray-200">
+            <div class="px-6 py-4 border-b border-gray-200">
+              <div class="grid grid-cols-12 gap-4 text-sm font-medium text-gray-500">
+                <div class="col-span-4">教材名称</div>
+                <div class="col-span-2">学科</div>
+                <div class="col-span-2">年级</div>
+                <div class="col-span-2">版本</div>
+                <div class="col-span-1">单元数</div>
+                <div class="col-span-1">操作</div>
+              </div>
+            </div>
+            
+            <div class="divide-y divide-gray-200">
+              <div 
+                v-for="textbook in filteredTextbooks" 
+                :key="textbook.id"
+                @click="selectTextbook(textbook)"
+                class="px-6 py-4 hover:bg-gray-50 cursor-pointer"
+              >
+                <div class="grid grid-cols-12 gap-4 items-center">
+                  <div class="col-span-4">
+                    <h3 class="font-medium text-gray-900">{{ textbook.name }}</h3>
                   </div>
-                </div>
-                <div class="col-span-2 text-sm text-gray-900">{{ textbook.subject }}</div>
-                <div class="col-span-1 text-sm text-gray-900">{{ textbook.grade }}</div>
-                <div class="col-span-2 text-sm text-gray-900">{{ textbook.version }}</div>
-                <div class="col-span-1 text-sm text-gray-900">{{ textbook.chapterCount }}</div>
-                <div class="col-span-1 text-sm text-gray-900">{{ textbook.pptCount }}</div>
-                <div class="col-span-1">
-                  <div class="flex space-x-1">
-                    <button class="text-gray-400 hover:text-blue-600 p-1">
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                      </svg>
-                    </button>
-                    <button class="text-gray-400 hover:text-red-600 p-1">
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                      </svg>
-                    </button>
+                  <div class="col-span-2 text-sm text-gray-500">{{ textbook.subject }}</div>
+                  <div class="col-span-2 text-sm text-gray-500">{{ textbook.grade }}</div>
+                  <div class="col-span-2 text-sm text-gray-500">{{ textbook.publisher }}</div>
+                  <div class="col-span-1 text-sm text-gray-500">{{ textbook.unitCount || 0 }}</div>
+                  <div class="col-span-1">
+                    <div class="flex space-x-2">
+                      <button 
+                        @click.stop="editTextbook(textbook)"
+                        class="text-blue-600 hover:text-blue-700 text-sm"
+                      >
+                        编辑
+                      </button>
+                      <button 
+                        @click.stop="deleteTextbook(textbook.id)"
+                        class="text-red-600 hover:text-red-700 text-sm"
+                      >
+                        删除
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -232,15 +207,15 @@
           </div>
         </div>
       </div>
-    </main>
+    </div>
 
     <!-- 教材详情模态框 -->
     <div v-if="selectedTextbook" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-hidden">
+      <div class="bg-white rounded-lg w-full max-w-6xl h-5/6 flex flex-col">
         <div class="flex items-center justify-between p-6 border-b border-gray-200">
           <div>
-            <h3 class="text-xl font-bold text-gray-900">{{ selectedTextbook.name }}</h3>
-            <p class="text-sm text-gray-600">{{ selectedTextbook.subject }} · {{ selectedTextbook.grade }} · {{ selectedTextbook.version }}</p>
+            <h2 class="text-xl font-semibold text-gray-900">{{ selectedTextbook.name }}</h2>
+            <p class="text-sm text-gray-500">{{ selectedTextbook.subject }} · {{ selectedTextbook.grade }} · {{ selectedTextbook.publisher }}</p>
           </div>
           <button @click="selectedTextbook = null" class="text-gray-400 hover:text-gray-600">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -250,57 +225,108 @@
         </div>
         
         <div class="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
-          <!-- 章节列表 -->
+          <!-- 单元列表 -->
           <div class="space-y-4">
             <div 
-              v-for="chapter in selectedTextbook.chapterList" 
-              :key="chapter.id"
+              v-for="unit in selectedTextbook.unitList" 
+              :key="unit.id"
               class="bg-gray-50 rounded-lg p-4"
             >
               <div class="flex items-center justify-between mb-3">
-                <h4 class="font-medium text-gray-900">{{ chapter.name }}</h4>
-                <button class="text-blue-600 hover:text-blue-700 text-sm font-medium">
-                  + 添加PPT
-                </button>
+                <h4 class="font-medium text-gray-900">{{ unit.name }}</h4>
+                <div class="flex space-x-2">
+                  <button 
+                    @click="addLesson(unit.id)"
+                    class="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                  >
+                    + 添加课程
+                  </button>
+                  <button 
+                    @click="editUnit(unit)"
+                    class="text-green-600 hover:text-green-700 text-sm font-medium"
+                  >
+                    编辑单元
+                  </button>
+                  <button 
+                    @click="deleteUnit(unit.id)"
+                    class="text-red-600 hover:text-red-700 text-sm font-medium"
+                  >
+                    删除单元
+                  </button>
+                </div>
               </div>
               
-              <!-- PPT列表 -->
+              <!-- 课程列表 -->
               <div class="space-y-2">
                 <div 
-                  v-for="ppt in chapter.ppts" 
-                  :key="ppt.id"
-                  class="bg-white rounded-lg p-3 flex items-center justify-between"
+                  v-for="lesson in unit.lessons" 
+                  :key="lesson.id"
+                  class="bg-white rounded-lg p-3"
                 >
-                  <div class="flex items-center space-x-3">
-                    <div class="w-8 h-8 bg-blue-100 rounded flex items-center justify-center">
-                      <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                      </svg>
+                  <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                      <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 bg-blue-100 rounded flex items-center justify-center">
+                          <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                          </svg>
+                        </div>
+                        <div class="flex-1">
+                          <h5 class="font-medium text-gray-900">{{ lesson.name }}</h5>
+                          <div class="flex items-center space-x-4 text-sm text-gray-500">
+                            <span>类型: {{ getLessonTypeLabel(lesson.lessonType) }}</span>
+                            <span>词汇: {{ lesson.vocabularies.length }}个</span>
+                            <span>句子: {{ lesson.sentences.length }}个</span>
+                            <span>场景: {{ lesson.scenarios.length }}个</span>
+                            <span v-if="lesson.pptId" class="text-green-600">已关联PPT</span>
+                            <button 
+                              v-else
+                              @click="createPPTForLesson(lesson.id)"
+                              class="text-blue-600 hover:text-blue-700 text-sm underline"
+                            >
+                              去创建PPT
+                            </button>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <h5 class="font-medium text-gray-900">{{ ppt.name }}</h5>
-                      <p class="text-sm text-gray-500">{{ ppt.createdAt }} · {{ ppt.slides }}页</p>
+                    
+                    <div class="flex items-center space-x-2">
+                      <button 
+                        @click="editLesson(lesson)"
+                        class="text-blue-600 hover:text-blue-700 text-sm"
+                      >
+                        编辑
+                      </button>
+                      <button 
+                        @click="viewLessonContent(lesson)"
+                        class="text-green-600 hover:text-green-700 text-sm"
+                      >
+                        查看内容
+                      </button>
+                      <button 
+                        @click="deleteLesson(lesson.id)"
+                        class="text-red-600 hover:text-red-700 text-sm"
+                      >
+                        删除
+                      </button>
                     </div>
-                  </div>
-                  
-                  <div class="flex items-center space-x-2">
-                    <button class="text-blue-600 hover:text-blue-700 text-sm">
-                      编辑
-                    </button>
-                    <button class="text-green-600 hover:text-green-700 text-sm">
-                      预览
-                    </button>
-                    <button class="text-red-600 hover:text-red-700 text-sm">
-                      删除
-                    </button>
                   </div>
                 </div>
                 
-                <div v-if="chapter.ppts.length === 0" class="text-center py-4 text-gray-500 text-sm">
-                  暂无PPT，点击上方按钮添加
+                <div v-if="unit.lessons.length === 0" class="text-center py-4 text-gray-500 text-sm">
+                  暂无课程，点击上方按钮添加
                 </div>
               </div>
             </div>
+            
+            <!-- 添加单元按钮 -->
+            <button 
+              @click="addUnit"
+              class="w-full border-2 border-dashed border-gray-300 rounded-lg py-4 text-gray-500 hover:border-gray-400 hover:text-gray-600"
+            >
+              + 添加单元
+            </button>
           </div>
         </div>
       </div>
@@ -356,9 +382,15 @@
                   required
                 >
                   <option value="">选择年级</option>
-                  <option value="高一">高一</option>
-                  <option value="高二">高二</option>
-                  <option value="高三">高三</option>
+                  <option value="1年级">1年级</option>
+                  <option value="2年级">2年级</option>
+                  <option value="3年级">3年级</option>
+                  <option value="4年级">4年级</option>
+                  <option value="5年级">5年级</option>
+                  <option value="6年级">6年级</option>
+                  <option value="初一">初一</option>
+                  <option value="初二">初二</option>
+                  <option value="初三">初三</option>
                 </select>
               </div>
             </div>
@@ -366,26 +398,27 @@
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">版本</label>
               <select 
-                v-model="newTextbook.version"
+                v-model="newTextbook.publisher"
                 class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 required
               >
                 <option value="">选择版本</option>
-                <option value="人教版">人教版</option>
-                <option value="苏教版">苏教版</option>
-                <option value="北师大版">北师大版</option>
-                <option value="沪教版">沪教版</option>
+                <option value="人民教育出版社">人民教育出版社</option>
+                <option value="江苏教育出版社">江苏教育出版社</option>
+                <option value="北京师范大学出版社">北京师范大学出版社</option>
+                <option value="外语教学与研究出版社">外语教学与研究出版社</option>
+                <option value="牛津大学出版社">牛津大学出版社</option>
               </select>
             </div>
             
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">章节数</label>
+              <label class="block text-sm font-medium text-gray-700 mb-2">单元数</label>
               <input 
-                v-model.number="newTextbook.chapters"
+                v-model.number="newTextbook.units"
                 type="number" 
                 min="1"
                 class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
-                placeholder="请输入章节数"
+                placeholder="请输入单元数"
                 required
               >
             </div>
@@ -409,6 +442,171 @@
         </form>
       </div>
     </div>
+
+    <!-- 编辑单元弹框 -->
+    <div v-if="showEditUnitModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-lg p-6 w-full max-w-md">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold text-gray-900">编辑单元</h3>
+          <button 
+            @click="closeEditUnitModal"
+            class="text-gray-400 hover:text-gray-600"
+          >
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+        
+        <form @submit.prevent="saveUnitEdit" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">单元名称</label>
+            <input 
+              v-model="editUnitForm.name"
+              type="text" 
+              class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+              placeholder="请输入单元名称"
+              required
+            >
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">单元描述</label>
+            <textarea 
+              v-model="editUnitForm.description"
+              class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+              placeholder="请输入单元描述（可选）"
+              rows="3"
+            ></textarea>
+          </div>
+          
+          <div class="flex justify-end space-x-3 mt-6">
+            <button 
+              type="button" 
+              @click="closeEditUnitModal"
+              class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+            >
+              取消
+            </button>
+            <button 
+              type="submit"
+              :disabled="loading"
+              class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-lg transition-colors"
+            >
+              {{ loading ? '保存中...' : '保存' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- 编辑教材弹框 -->
+    <div v-if="showEditTextbookModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+        <div class="flex items-center justify-between p-6 border-b border-gray-200">
+          <h3 class="text-lg font-medium text-gray-900">编辑教材</h3>
+          <button @click="closeEditTextbookModal" class="text-gray-400 hover:text-gray-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+        
+        <form @submit.prevent="saveTextbookEdit" class="p-6 space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">教材名称</label>
+            <input 
+              v-model="editTextbookForm.name"
+              type="text" 
+              class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+              placeholder="请输入教材名称"
+              required
+            >
+          </div>
+          
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">学科</label>
+              <select 
+                v-model="editTextbookForm.subject"
+                class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              >
+                <option value="">选择学科</option>
+                <option value="英语">英语</option>
+                <option value="物理">物理</option>
+                <option value="化学">化学</option>
+                <option value="语文">语文</option>
+                <option value="数学">数学</option>
+              </select>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">年级</label>
+              <select 
+                v-model="editTextbookForm.grade"
+                class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              >
+                <option value="">选择年级</option>
+                <option value="1年级">1年级</option>
+                <option value="2年级">2年级</option>
+                <option value="3年级">3年级</option>
+                <option value="4年级">4年级</option>
+                <option value="5年级">5年级</option>
+                <option value="6年级">6年级</option>
+                <option value="初一">初一</option>
+                <option value="初二">初二</option>
+                <option value="初三">初三</option>
+              </select>
+            </div>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">版本</label>
+            <select 
+              v-model="editTextbookForm.publisher"
+              class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              required
+            >
+              <option value="">选择版本</option>
+              <option value="人民教育出版社">人民教育出版社</option>
+              <option value="江苏教育出版社">江苏教育出版社</option>
+              <option value="北京师范大学出版社">北京师范大学出版社</option>
+              <option value="外语教学与研究出版社">外语教学与研究出版社</option>
+              <option value="牛津大学出版社">牛津大学出版社</option>
+            </select>
+          </div>
+          
+          <div class="flex justify-end space-x-3 mt-6">
+            <button 
+              type="button" 
+              @click="closeEditTextbookModal"
+              class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+            >
+              取消
+            </button>
+            <button 
+              type="submit"
+              :disabled="loading"
+              class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-lg transition-colors"
+            >
+              {{ loading ? '保存中...' : '保存' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- 课程编辑器 -->
+    <div v-if="showLessonEditor" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <LessonEditor 
+        :lesson="editingLesson"
+        :unit-id="editingUnitId"
+        @close="closeLessonEditor"
+        @saved="handleLessonSaved"
+      />
+    </div>
   </div>
 </template>
 
@@ -417,7 +615,8 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useWorkspaceStore } from '@/stores/workspace'
 import { textbookAPI } from '@/api/textbook'
 import Sidebar from '@/components/Sidebar.vue'
-import type { Textbook, Chapter, PPT } from '@/api/types'
+import LessonEditor from '@/components/LessonEditor.vue'
+import type { Textbook, Unit, Lesson, LessonType } from '@/api/types'
 
 // 工作空间store
 const workspaceStore = useWorkspaceStore()
@@ -426,7 +625,14 @@ const { workspaces, currentWorkspace, currentWorkspaceName, switchWorkspace } = 
 // 响应式数据
 const viewMode = ref('grid')
 const showCreateModal = ref(false)
+const showLessonEditor = ref(false)
+const showEditUnitModal = ref(false)
+const showEditTextbookModal = ref(false)
 const selectedTextbook = ref<Textbook | null>(null)
+const editingLesson = ref<Lesson | undefined>(undefined)
+const editingUnit = ref<Unit | undefined>(undefined)
+const editingTextbook = ref<Textbook | undefined>(undefined)
+const editingUnitId = ref<number>(0)
 const selectedWorkspaceId = ref(currentWorkspace?.id || '')
 const searchQuery = ref('')
 const loading = ref(false)
@@ -440,9 +646,23 @@ const newTextbook = ref({
   name: '',
   subject: '',
   grade: '',
-  version: '',
-  chapters: 1,
+  publisher: '',
+  units: 1,
   workspaceId: ''
+})
+
+// 编辑单元表单数据
+const editUnitForm = ref({
+  name: '',
+  description: ''
+})
+
+// 编辑教材表单数据
+const editTextbookForm = ref({
+  name: '',
+  subject: '',
+  grade: '',
+  publisher: ''
 })
 
 // 筛选条件
@@ -478,20 +698,49 @@ const filteredTextbooks = computed(() => {
   
   // 版本过滤
   if (filters.value.version) {
-    result = result.filter(textbook => textbook.version === filters.value.version)
+    result = result.filter(textbook => textbook.publisher === filters.value.version)
   }
   
   return result
 })
 
-// 加载教材列表
-const loadTextbooks = async () => {
+/**
+ * 获取课程类型标签
+ */
+const getLessonTypeLabel = (type: LessonType): string => {
+  const labels = {
+    VOCABULARY_SENTENCE: '词汇句子',
+    SCENARIO_BASED: '场景对话',
+    GRAMMAR_FOCUSED: '语法重点',
+    CONVERSATION: '对话练习',
+    READING_COMPREHENSION: '阅读理解'
+  }
+  return labels[type] || type
+}
+
+/**
+ * 加载教材列表
+ */
+const loadTextbooks = async (): Promise<void> => {
   if (!currentWorkspace) return
   
   try {
     loading.value = true
     error.value = null
-    textbooks.value = await textbookAPI.getTextbooks(currentWorkspace.id)
+    const textbookList = await textbookAPI.getTextbooks(currentWorkspace.id)
+    
+    // 为每个教材获取单元数量
+    for (const textbook of textbookList) {
+      try {
+        const units = await textbookAPI.getTextbookUnits(textbook.id)
+        textbook.unitCount = units.length
+      } catch (err) {
+        console.warn(`Failed to load units for textbook ${textbook.id}:`, err)
+        textbook.unitCount = 0
+      }
+    }
+    
+    textbooks.value = textbookList
   } catch (err) {
     error.value = '加载教材列表失败'
     console.error('Failed to load textbooks:', err)
@@ -500,14 +749,22 @@ const loadTextbooks = async () => {
   }
 }
 
-// 选择教材
-const selectTextbook = async (textbook: Textbook) => {
+/**
+ * 选择教材
+ */
+const selectTextbook = async (textbook: Textbook): Promise<void> => {
   try {
     loading.value = true
-    // 获取教材详情和章节信息
+    // 获取教材详情和单元信息
     const detailTextbook = await textbookAPI.getTextbookDetail(textbook.id)
-    const chapters = await textbookAPI.getTextbookChapters(textbook.id)
-    detailTextbook.chapterList = chapters
+    const units = await textbookAPI.getTextbookUnits(textbook.id)
+    
+    // 为每个单元加载课程
+    for (const unit of units) {
+      unit.lessons = await textbookAPI.getUnitLessons(unit.id)
+    }
+    
+    detailTextbook.unitList = units
     selectedTextbook.value = detailTextbook
   } catch (err) {
     error.value = '加载教材详情失败'
@@ -517,8 +774,10 @@ const selectTextbook = async (textbook: Textbook) => {
   }
 }
 
-// 处理工作空间切换
-const handleWorkspaceChange = () => {
+/**
+ * 处理工作空间切换
+ */
+const handleWorkspaceChange = (): void => {
   if (selectedWorkspaceId.value) {
     switchWorkspace(selectedWorkspaceId.value)
     selectedTextbook.value = null
@@ -526,8 +785,10 @@ const handleWorkspaceChange = () => {
   }
 }
 
-// 创建教材
-const createTextbook = async () => {
+/**
+ * 创建教材
+ */
+const createTextbook = async (): Promise<void> => {
   if (!currentWorkspace) return
   
   try {
@@ -537,10 +798,13 @@ const createTextbook = async () => {
     const textbookData = {
       ...newTextbook.value,
       workspaceId: currentWorkspace.id,
-      pptCount: 0
+      pptCount: 0,
+      coverImage: ''
     }
     
     const createdTextbook = await textbookAPI.createTextbook(textbookData)
+    // 新创建的教材初始单元数量为0
+    createdTextbook.unitCount = 0
     textbooks.value.push(createdTextbook)
     
     // 重置表单
@@ -548,8 +812,8 @@ const createTextbook = async () => {
       name: '',
       subject: '',
       grade: '',
-      version: '',
-      chapters: 1,
+      publisher: '',
+      units: 1,
       workspaceId: ''
     }
     
@@ -562,8 +826,10 @@ const createTextbook = async () => {
   }
 }
 
-// 删除教材
-const deleteTextbook = async (textbookId: number) => {
+/**
+ * 删除教材
+ */
+const deleteTextbook = async (textbookId: number): Promise<void> => {
   if (!confirm('确定要删除这个教材吗？')) return
   
   try {
@@ -582,39 +848,293 @@ const deleteTextbook = async (textbookId: number) => {
   }
 }
 
-// 创建章节
-const createChapter = async (textbookId: number, chapterName: string) => {
+/**
+ * 添加单元
+ */
+const addUnit = async (): Promise<void> => {
+  if (!selectedTextbook.value) return
+  
+  const unitName = prompt('请输入单元名称:')
+  if (!unitName) return
+  
   try {
     loading.value = true
-    const chapter = await textbookAPI.createChapter(textbookId, { name: chapterName })
+    const unit = await textbookAPI.createUnit(selectedTextbook.value.id, {
+      name: unitName,
+      unitOrder: (selectedTextbook.value.unitList?.length || 0) + 1,
+      textbookId: selectedTextbook.value.id,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    })
     
-    if (selectedTextbook.value?.id === textbookId) {
-      selectedTextbook.value.chapterList.push(chapter)
+    unit.lessons = []
+    
+    if (!selectedTextbook.value.unitList) {
+      selectedTextbook.value.unitList = []
+    }
+    selectedTextbook.value.unitList.push(unit)
+    
+    // 更新教材列表中对应教材的单元数量
+    const textbookInList = textbooks.value.find(t => t.id === selectedTextbook.value!.id)
+    if (textbookInList) {
+      textbookInList.unitCount = selectedTextbook.value.unitList.length
     }
   } catch (err) {
-    error.value = '创建章节失败'
-    console.error('Failed to create chapter:', err)
+    error.value = '创建单元失败'
+    console.error('Failed to create unit:', err)
   } finally {
     loading.value = false
   }
 }
 
-// 监听当前工作空间变化
-watch(currentWorkspace, (newWorkspace) => {
+/**
+ * 编辑单元
+ */
+const editUnit = (unit: Unit): void => {
+  editingUnit.value = unit
+  editUnitForm.value = {
+    name: unit.name,
+    description: unit.description || ''
+  }
+  showEditUnitModal.value = true
+}
+
+/**
+ * 保存单元编辑
+ */
+const saveUnitEdit = async (): Promise<void> => {
+  if (!editingUnit.value) return
+  
+  try {
+    loading.value = true
+    await textbookAPI.updateUnit(editingUnit.value.id, editUnitForm.value)
+    
+    // 更新本地数据
+    editingUnit.value.name = editUnitForm.value.name
+    editingUnit.value.description = editUnitForm.value.description
+    
+    // 关闭弹框
+    closeEditUnitModal()
+  } catch (err) {
+    error.value = '更新单元失败'
+    console.error('Failed to update unit:', err)
+  } finally {
+    loading.value = false
+  }
+}
+
+/**
+ * 关闭编辑单元弹框
+ */
+const closeEditUnitModal = (): void => {
+  showEditUnitModal.value = false
+  editingUnit.value = undefined
+  editUnitForm.value = {
+    name: '',
+    description: ''
+  }
+}
+
+/**
+ * 删除单元
+ */
+const deleteUnit = async (unitId: number): Promise<void> => {
+  if (!confirm('确定要删除这个单元吗？删除后将无法恢复！')) return
+  
+  try {
+    loading.value = true
+    await textbookAPI.deleteUnit(unitId)
+    
+    // 从UI中移除单元
+    if (selectedTextbook.value?.unitList) {
+      selectedTextbook.value.unitList = selectedTextbook.value.unitList.filter(u => u.id !== unitId)
+      
+      // 更新教材列表中对应教材的单元数量
+      const textbookInList = textbooks.value.find(t => t.id === selectedTextbook.value!.id)
+      if (textbookInList) {
+        textbookInList.unitCount = selectedTextbook.value.unitList.length
+      }
+    }
+  } catch (err) {
+    error.value = '删除单元失败'
+    console.error('Failed to delete unit:', err)
+  } finally {
+    loading.value = false
+  }
+}
+
+/**
+ * 添加课程
+ */
+const addLesson = (unitId: number): void => {
+  editingLesson.value = undefined
+  editingUnitId.value = unitId
+  showLessonEditor.value = true
+}
+
+/**
+ * 编辑课程
+ */
+const editLesson = (lesson: Lesson): void => {
+  editingLesson.value = lesson
+  editingUnitId.value = lesson.unitId
+  showLessonEditor.value = true
+}
+
+/**
+ * 查看课程内容
+ */
+const viewLessonContent = (lesson: Lesson): void => {
+  // 这里可以实现课程内容查看功能
+  const vocabularies = lesson.vocabularies.map(v => v.word).join(', ')
+  const sentences = lesson.sentences.map(s => s.content).join(', ')
+  const scenarios = lesson.scenarios.join(', ')
+  alert(`课程内容:\n词汇: ${vocabularies}\n句子: ${sentences}\n场景: ${scenarios}`)
+}
+
+/**
+ * 跳转到PPT创建页面
+ */
+const createPPTForLesson = (lessonId: number): void => {
+  const url = `http://localhost:5174/?lessonId=${lessonId}`
+  window.open(url, '_blank')
+}
+
+/**
+ * 删除课程
+ */
+const deleteLesson = async (lessonId: number): Promise<void> => {
+  if (!confirm('确定要删除这个课程吗？')) return
+  
+  try {
+    loading.value = true
+    await textbookAPI.deleteLesson(lessonId)
+    
+    // 从UI中移除课程
+    if (selectedTextbook.value?.unitList) {
+      for (const unit of selectedTextbook.value.unitList) {
+        unit.lessons = unit.lessons.filter(l => l.id !== lessonId)
+      }
+    }
+  } catch (err) {
+    error.value = '删除课程失败'
+    console.error('Failed to delete lesson:', err)
+  } finally {
+    loading.value = false
+  }
+}
+
+/**
+ * 关闭课程编辑器
+ */
+const closeLessonEditor = (): void => {
+  showLessonEditor.value = false
+  editingLesson.value = undefined
+  editingUnitId.value = 0
+}
+
+/**
+ * 处理课程保存
+ */
+const handleLessonSaved = (lesson: Lesson): void => {
+  if (!selectedTextbook.value?.unitList) return
+  
+  const unit = selectedTextbook.value.unitList.find(u => u.id === lesson.unitId)
+  if (!unit) return
+  
+  const existingIndex = unit.lessons.findIndex(l => l.id === lesson.id)
+  if (existingIndex >= 0) {
+    // 更新现有课程
+    unit.lessons[existingIndex] = lesson
+  } else {
+    // 添加新课程
+    unit.lessons.push(lesson)
+  }
+  
+  // 保存成功后关闭弹框
+  closeLessonEditor()
+}
+
+/**
+ * 编辑教材
+ */
+const editTextbook = (textbook: Textbook): void => {
+  editingTextbook.value = textbook
+  editTextbookForm.value = {
+    name: textbook.name,
+    subject: textbook.subject,
+    grade: textbook.grade,
+    publisher: textbook.publisher
+  }
+  showEditTextbookModal.value = true
+}
+
+/**
+ * 保存教材编辑
+ */
+const saveTextbookEdit = async (): Promise<void> => {
+  if (!editingTextbook.value) return
+  
+  try {
+    loading.value = true
+    
+    // 确保包含必要的字段，特别是 workspace_id
+    const updateData = {
+      ...editTextbookForm.value,
+      workspaceId: editingTextbook.value.workspaceId,
+      pptCount: editingTextbook.value.pptCount || 0,
+      coverImage: editingTextbook.value.coverImage || ''
+    }
+    
+    const updatedTextbook = await textbookAPI.updateTextbook(editingTextbook.value.id, updateData)
+    
+    // 更新本地数据
+    const index = textbooks.value.findIndex(t => t.id === editingTextbook.value!.id)
+    if (index !== -1) {
+      textbooks.value[index] = { ...textbooks.value[index], ...updatedTextbook }
+    }
+    
+    alert('教材更新成功')
+    closeEditTextbookModal()
+  } catch (err) {
+    console.error('更新教材失败:', err)
+    alert('更新教材失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+/**
+ * 关闭编辑教材弹框
+ */
+const closeEditTextbookModal = (): void => {
+  showEditTextbookModal.value = false
+  editingTextbook.value = undefined
+  editTextbookForm.value = {
+    name: '',
+    subject: '',
+    grade: '',
+    publisher: ''
+  }
+}
+
+/**
+ * 监听工作空间变化
+ */
+watch(() => currentWorkspace, (newWorkspace) => {
   if (newWorkspace) {
     selectedWorkspaceId.value = newWorkspace.id
     loadTextbooks()
   }
-})
+}, { immediate: true })
 
-// 组件挂载时加载数据
+/**
+ * 组件挂载时加载数据
+ */
 onMounted(() => {
   if (currentWorkspace) {
+    selectedWorkspaceId.value = currentWorkspace.id
     loadTextbooks()
   }
 })
 </script>
-
-<style scoped>
-/* 教材管理页面样式 */
-</style>
