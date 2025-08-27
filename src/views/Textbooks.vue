@@ -1038,7 +1038,28 @@ const viewLessonContent = (lesson: Lesson): void => {
  * 跳转到PPT创建页面
  */
 const createPPTForLesson = (lessonId: number): void => {
-  const url = `http://localhost:5174/?lessonId=${lessonId}`
+  // 查找对应的lesson对象
+  let targetLesson: Lesson | undefined
+  if (selectedTextbook.value?.unitList) {
+    for (const unit of selectedTextbook.value.unitList) {
+      targetLesson = unit.lessons.find(l => l.id === lessonId)
+      if (targetLesson) break
+    }
+  }
+  
+  if (!targetLesson || !selectedTextbook.value) {
+    alert('无法找到课程信息')
+    return
+  }
+  
+  // 构建URL参数
+  const params = new URLSearchParams({
+    lessonId: lessonId.toString(),
+    grade: selectedTextbook.value.grade,
+    courseType: targetLesson.lessonType
+  })
+  
+  const url = `http://localhost:5174/?${params.toString()}`
   window.open(url, '_blank')
 }
 
