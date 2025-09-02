@@ -1,8 +1,6 @@
 import axios from 'axios'
 import type { Template, TemplateElement, TemplateTag, TemplateFormData } from './types'
-
-// API基础URL
-const API_BASE_URL = 'http://localhost:3001/api'
+import { API_BASE_URL } from './config';
 
 // 创建axios实例
 const api = axios.create({

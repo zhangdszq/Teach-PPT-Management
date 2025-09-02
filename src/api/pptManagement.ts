@@ -1,12 +1,10 @@
 // PPT管理相关的API接口
 import axios from 'axios'
-
-// 配置axios基础URL
-const API_BASE_URL = 'http://localhost:3001/api/ppt/management'
+import { PPT_MANAGEMENT_API_BASE_URL } from './config';
 
 // 创建axios实例
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: PPT_MANAGEMENT_API_BASE_URL,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json'
